@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+  desafio-mutual-api:
+    container_name: desafio_mutual_api
+    image: node:14.18-alpine
+    working_dir: /app
+    volumes:
+      - '.:/app'
+    env_file: .env
+    ports:
+      - ${API_PORT}:${API_PORT}
+    entrypoint: ./start.sh
+    depends_on:
+      - "db"
+  
+  db:
+    container_name: desafio_mutual_db
+    image: postgres
+    restart: always
+    volumes:
+      - /private/var/lib/postgresql:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pguser
