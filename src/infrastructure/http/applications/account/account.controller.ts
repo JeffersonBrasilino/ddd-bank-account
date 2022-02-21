@@ -86,7 +86,10 @@ export class AccountController {
   })
   @ApiParam({ name: 'id', description: 'id da conta' })
   @Get(':id/balance')
-  async getBalance(@Param('id') uuid: string, @Res() res: Response) {
+  async getBalance(
+    @Param('id') uuid: string,
+    @Res() res: Response,
+  ): Promise<Response> {
     try {
       const a = await new AccountBalanceUseCase(this._repo).execute(uuid);
       return HttpResponse.ok(res, a);
@@ -130,7 +133,10 @@ export class AccountController {
     description: 'quando existir uma conta para o cpf',
   })
   @Post('create')
-  async login(@Body() body: AccountDto, @Res() res: Response) {
+  async login(
+    @Body() body: AccountDto,
+    @Res() res: Response,
+  ): Promise<Response> {
     try {
       const a = await new CreateAccountUseCase(this._repo).execute(body);
       return HttpResponse.created(res, a);
@@ -164,7 +170,7 @@ export class AccountController {
   async accountTransfer(
     @Body() body: AccountTransferDto,
     @Res() res: Response,
-  ) {
+  ): Promise<Response> {
     try {
       const a = await new AccountTransferUseCase(this._repo).execute(body);
       return HttpResponse.ok(res, a);
@@ -201,7 +207,7 @@ export class AccountController {
     @Param('id') id: string,
     @Body() body: AccountCreditDto,
     @Res() res: Response,
-  ) {
+  ): Promise<Response> {
     try {
       const data: AccountCreditDtoDomain = {
         accountId: id,
@@ -242,7 +248,7 @@ export class AccountController {
     @Param('id') id: string,
     @Body() body: AccountDebitDto,
     @Res() res: Response,
-  ) {
+  ): Promise<Response> {
     try {
       const data: AccountDebitDtoDomain = {
         accountId: id,

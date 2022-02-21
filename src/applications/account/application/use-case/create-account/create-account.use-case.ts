@@ -6,7 +6,7 @@ import { Movement } from '@applications/account/domain/entities/movement';
 import { IAccountRepository } from '@applications/account/domain/contracts/IAccount.repository';
 export class CreateAccountUseCase {
   constructor(private _repo: IAccountRepository) {}
-  async execute(props: CreateAccountDto) {
+  async execute(props: CreateAccountDto): Promise<any> {
     try {
       const cpf: CpfValueObject = CpfValueObject.create(props.cpf);
       if (await this._repo.getAccountByCpf(cpf.value)) throw Error('CONFLICT');

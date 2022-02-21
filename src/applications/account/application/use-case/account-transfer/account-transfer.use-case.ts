@@ -2,7 +2,7 @@ import { AccountTransferDto } from './account-transfer.dto';
 import { IAccountRepository } from '@applications/account/domain/contracts/IAccount.repository';
 export class AccountTransferUseCase {
   constructor(private repo: IAccountRepository) {}
-  async execute(props: AccountTransferDto) {
+  async execute(props: AccountTransferDto): Promise<any> {
     try {
       //dados da conta de destino
       const accountDestiny = await this.repo.getAccountByUuId(

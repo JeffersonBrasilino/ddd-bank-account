@@ -2,7 +2,7 @@ import { IAccountRepository } from '@applications/account/domain/contracts/IAcco
 import { MovementMapper } from '@applications/account/mapper/movement.mapper';
 export class AccountBalanceUseCase {
   constructor(private _repo: IAccountRepository) {}
-  async execute(accountId: string | number) {
+  async execute(accountId: string | number): Promise<any> {
     try {
       if (!accountId) throw Error('account uuid nao pode ser vazio.');
 

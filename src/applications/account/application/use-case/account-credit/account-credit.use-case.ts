@@ -4,7 +4,7 @@ import { AccountMapper } from '@applications/account/mapper/account.mapper';
 
 export class AccountCreditUseCase {
   constructor(private _repo: IAccountRepository) {}
-  async execute(props: AccountCreditDto) {
+  async execute(props: AccountCreditDto): Promise<any> {
     try {
       const accountData = await this._repo.getAccountByUuId(props.accountId);
       if (!accountData) throw Error('NOT_FOUND');

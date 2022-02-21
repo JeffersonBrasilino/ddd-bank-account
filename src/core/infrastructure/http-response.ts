@@ -34,11 +34,11 @@ export class HttpResponse {
     return response.status(res.status).json(res);
   }
 
-  static ok(res: Response, data?: any) {
+  static ok(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(true, HttpResponse.OK_CODE, res, data);
   }
 
-  static created(res: Response, data?: any) {
+  static created(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       true,
       HttpResponse.CREATED_CODE,
@@ -47,7 +47,7 @@ export class HttpResponse {
     );
   }
 
-  static notFound(res: Response, data?: any) {
+  static notFound(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       false,
       HttpResponse.NOT_FOUND_CODE,
@@ -56,7 +56,7 @@ export class HttpResponse {
     );
   }
 
-  static badRequest(res: Response, data?: any) {
+  static badRequest(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       false,
       HttpResponse.BAD_REQUEST_CODE,
@@ -65,7 +65,7 @@ export class HttpResponse {
     );
   }
 
-  static forbidden(res: Response, data?: any) {
+  static forbidden(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       false,
       HttpResponse.FORBIDEN_CODE,
@@ -74,7 +74,7 @@ export class HttpResponse {
     );
   }
 
-  static unauthorized(res: Response, data?: any) {
+  static unauthorized(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       false,
       HttpResponse.UNAUTORIZED_CODE,
@@ -83,7 +83,7 @@ export class HttpResponse {
     );
   }
 
-  static conflict(res: Response, data?: any) {
+  static conflict(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       false,
       HttpResponse.CONFLICT_CODE,
@@ -92,7 +92,7 @@ export class HttpResponse {
     );
   }
 
-  static internalServerError(res: Response, data?: any) {
+  static internalServerError(res: Response, data?: any): Response {
     return HttpResponse.jsonResponse(
       false,
       HttpResponse.INTERNAL_SERVER_ERROR_CODE,
