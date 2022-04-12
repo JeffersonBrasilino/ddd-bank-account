@@ -4,5 +4,5 @@ interface MovementDto {
 export interface CreateAccountDto {
   cpf: string;
   name: string;
-  movement: MovementDto;
+  movement: MovementDto[];
 }

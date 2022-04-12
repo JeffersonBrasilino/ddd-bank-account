@@ -10,4 +10,4 @@ echo "executando as MIGRACOES do banco..."
 npx typeorm migration:run
 
 echo "iniciando a api..."
-npm run start:prod
+npm run start:dev

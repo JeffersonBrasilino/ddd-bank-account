@@ -4,23 +4,56 @@ import { AccountMapper } from '@applications/account/mapper/account.mapper';
 import { CreateAccountDto } from './create-account.dto';
 import { Movement } from '@applications/account/domain/entities/movement';
 import { IAccountRepository } from '@applications/account/domain/contracts/IAccount.repository';
-export class CreateAccountUseCase {
-  constructor(private _repo: IAccountRepository) {}
-  async execute(props: CreateAccountDto): Promise<any> {
-    try {
-      const cpf: CpfValueObject = CpfValueObject.create(props.cpf);
-      if (await this._repo.getAccountByCpf(cpf.value)) throw Error('CONFLICT');
+import { Result } from '@core/shared/result';
+import {
+  BadRequesErrortUseCase,
+  InternalErrorUseCase,
+} from '@core/application/use-case.errors';
+import { IUseCase } from '@core/application/Iuse-case';
 
-      const movement = props.movement ? Movement.create(props.movement) : null;
-      const account = Account.create({
-        cpf: cpf,
+type Response =
+  | BadRequesErrortUseCase<CreateAccountUseCase>
+  | Result<any>
+  | Result<void>;
+export class CreateAccountUseCase
+  implements IUseCase<CreateAccountDto, Response>
+{
+  constructor(private _repo: IAccountRepository) {}
+  async execute(props: CreateAccountDto): Promise<Response> {
+    try {
+      //cria o cpf e everifica se e valido
+      const cpfOrError: Result<CpfValueObject> = CpfValueObject.create(
+        props.cpf,
+      );
+      if (!cpfOrError.isSuccess)
+        return new BadRequesErrortUseCase<CpfValueObject>(
+          cpfOrError.getError(),
+        );
+
+      //cria as movimentacoes e verifica se todas elas sao validas
+      const movementsOrError: Result<Movement>[] = props.movement
+        ? props.movement.map((v) => Movement.create(v))
+        : [];
+      const movementsOrErrorResult = Result.combine(movementsOrError);
+      if (!movementsOrErrorResult.isSuccess) {
+        return new BadRequesErrortUseCase(movementsOrErrorResult.getError());
+      }
+
+      //cira a conta e verifica se a conta e valida
+      const accountOrError: Result<Account> = Account.create({
+        cpf: cpfOrError.getValue(),
         name: props.name,
-        movement: movement,
+        movement: movementsOrError.map((v) => v.getValue()),
       });
-      this._repo.save(account);
-      return AccountMapper.toDto(account);
+      if (!accountOrError.isSuccess)
+        return new BadRequesErrortUseCase<Account>(accountOrError.getError());
+
+      this._repo.save(accountOrError.getValue());
+      return Result.ok<CreateAccountUseCase>(
+        AccountMapper.toDto(accountOrError.getValue()),
+      );
     } catch (e) {
-      throw e;
+      return new InternalErrorUseCase<CreateAccountUseCase>(e);
     }
   }
 }

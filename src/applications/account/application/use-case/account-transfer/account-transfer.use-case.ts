@@ -17,9 +17,9 @@ export class AccountTransferUseCase {
       if (!accountOrigin) throw Error('conta de origem nao existe');
 
       //debita o valor da conta de origem
-      accountOrigin.movement.debit(props.value);
+      //accountOrigin.movement.debit(props.value);
       //credita na conta de destino
-      accountDestiny.movement.credit(props.value);
+      //accountDestiny.movement.credit(props.value);
       //salva o desconto da origem no banco
       await this.repo.save(accountOrigin);
 

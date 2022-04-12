@@ -1,4 +1,5 @@
 import { Entity, EntityProps } from '@core/domain/entity';
+import { Result } from '@core/shared/result';
 export interface MovementProps extends EntityProps {
   value: number;
   createdAt?: Date;
@@ -15,8 +16,6 @@ export class Movement extends Entity {
   }
   private constructor(props: MovementProps) {
     super(props.id);
-
-    if (Movement.isValid(props.value)) throw Error('valor incorreto.');
     this._value = props.value;
     this._createdAt = props.createdAt ?? new Date();
   }
@@ -25,24 +24,33 @@ export class Movement extends Entity {
     return !!(value < 0) || value == null;
   }
 
-  credit(value: number): void {
+  credit(value: number): Result<Movement> | void {
     if (Movement.isValid(value))
-      throw Error('valor a ser creditado nao pode ser negativo');
+      return Result.fail<Movement>(
+        'valor a ser creditado nao pode ser negativo',
+      );
     this._value = parseFloat((this._value + value).toFixed(2));
   }
 
-  debit(value: number): void {
+  debit(value: number): Result<Movement> | void {
     if (Movement.isValid(value))
-      throw Error('valor a ser debitado nao pode ser negativo');
+      return Result.fail<Movement>(
+        'valor a ser creditado nao pode ser negativo',
+      );
 
     const resultDebitOperation = this._value - value;
     if (resultDebitOperation < 0)
-      throw Error('o valor a ser debitado ultrapassa o saldo da conta.');
+      return Result.fail<Movement>(
+        'o valor a ser debitado ultrapassa o saldo da conta.',
+      );
 
     this._value = parseFloat((this._value - value).toFixed(2));
   }
 
-  static create(props: MovementProps) {
-    return new Movement(props);
+  static create(props: MovementProps): Result<Movement> {
+    if (Movement.isValid(props.value))
+      return Result.fail<Movement>('valor da movimentacao incorreto.');
+
+    return Result.ok<Movement>(new Movement(props));
   }
 }

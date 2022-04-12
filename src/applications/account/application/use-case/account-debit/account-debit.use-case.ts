@@ -9,7 +9,7 @@ export class AccountDebitUseCase {
       const accountData = await this._repo.getAccountByUuId(props.accountId);
       if (!accountData) throw Error('NOT_FOUND');
 
-      accountData.movement.debit(props.value);
+      //accountData.movement.debit(props.value);
       await this._repo.save(accountData);
       return AccountMapper.toDto(accountData);
     } catch (e) {

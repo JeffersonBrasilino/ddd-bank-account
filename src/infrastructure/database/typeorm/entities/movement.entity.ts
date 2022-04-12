@@ -1,5 +1,12 @@
 import { BaseEntity } from '@infrastructure/database/core/base.entity';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { AccountEntity } from './account.entity';
 
 @Entity('movement')
@@ -12,7 +19,7 @@ export class MovementEntity extends BaseEntity {
   })
   value!: number;
 
-  @OneToOne(() => AccountEntity, (ae) => ae.movement)
+  @ManyToOne(() => AccountEntity, (ae) => ae.movement)
   @JoinColumn({
     name: 'account_id',
   })

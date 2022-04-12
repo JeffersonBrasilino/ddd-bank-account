@@ -14,15 +14,21 @@ export class AccountMapper {
    * o retorno do banco de dados no dominio
    */
   static toDomain(rawData: Partial<any>): Account {
-    return Account.create({
+    const accountOrError = Account.create({
       id: rawData.id,
-      cpf: CpfValueObject.create(rawData.cpf),
+      cpf: CpfValueObject.create(rawData.cpf).getValue(),
       name: rawData.name,
       createdAt: rawData.createdAt,
       movement: rawData.movement
-        ? MovementMapper.toDomain(rawData.movement)
-        : null,
+        ? rawData.movement.map((val) => MovementMapper.toDomain(val))
+        : [],
     });
+
+    accountOrError.isSuccess == false
+      ? console.log(accountOrError.getError())
+      : '';
+
+    return accountOrError.getValue();
   }
 
   /**
@@ -37,8 +43,8 @@ export class AccountMapper {
       name: data.name,
       createdAt: data.createdAt,
       movement: data.movement
-        ? MovementMapper.toPersistence(data.movement)
-        : null,
+        ? data.movement.map((val) => MovementMapper.toPersistence(val))
+        : [],
     };
   }
 

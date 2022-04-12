@@ -23,6 +23,10 @@ import { AccountDebitUseCase } from '@applications/account/application/use-case/
 import { AccountBalanceUseCase } from '@applications/account/application/use-case/account-balance/account-balance.use-case';
 import { AccountTransferDto } from './account-transfer.dto';
 import { AccountTransferUseCase } from '@applications/account/application/use-case/account-transfer/account-transfer.use-case';
+import {
+  BadRequesErrortUseCase,
+  NotFoundErrorUseCase,
+} from '@core/application/use-case.errors';
 
 @Controller('account')
 @ApiResponse({
@@ -92,12 +96,20 @@ export class AccountController {
   ): Promise<Response> {
     try {
       const a = await new AccountBalanceUseCase(this._repo).execute(uuid);
-      return HttpResponse.ok(res, a);
+      if (!a.isSuccess) {
+        switch (a.constructor) {
+          case NotFoundErrorUseCase:
+            return HttpResponse.notFound(res, a.getError());
+          default:
+            return HttpResponse.internalServerError(res, 'houve um problema.');
+        }
+      }
+      return HttpResponse.ok(res, a.getValue());
     } catch (e) {
-      const error = e.message;
-      if (error == 'NOT_FOUND') return HttpResponse.notFound(res);
-
-      return HttpResponse.internalServerError(res, e.toString());
+      return HttpResponse.internalServerError(
+        res,
+        'algo de errado nao esta certo.',
+      );
     }
   }
 
@@ -133,20 +145,23 @@ export class AccountController {
     description: 'quando existir uma conta para o cpf',
   })
   @Post('create')
-  async login(
-    @Body() body: AccountDto,
-    @Res() res: Response,
-  ): Promise<Response> {
+  async login(@Body() body: any, @Res() res: Response): Promise<Response> {
     try {
       const a = await new CreateAccountUseCase(this._repo).execute(body);
-      return HttpResponse.created(res, a);
+      if (!a.isSuccess) {
+        switch (a.constructor) {
+          case BadRequesErrortUseCase:
+            return HttpResponse.badRequest(res, a.getError());
+          default:
+            return HttpResponse.internalServerError(res, 'houve um problema.');
+        }
+      }
+      return HttpResponse.created(res, a.getValue());
     } catch (e) {
-      const error = e.message;
-      if (error == 'NOT_FOUND') return HttpResponse.notFound(res);
-      if (error == 'CONFLICT')
-        return HttpResponse.conflict(res, 'ja existe uma conta para este cpf');
-
-      return HttpResponse.internalServerError(res, e.toString());
+      return HttpResponse.internalServerError(
+        res,
+        'algo de errado nao esta certo.',
+      );
     }
   }
 

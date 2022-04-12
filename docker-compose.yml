@@ -1,7 +1,7 @@
 version: '3.9'
 services:
-  desafio-mutual-api:
-    container_name: desafio_mutual_api
+  api:
+    container_name: bank_ddd_prototype_api
     image: node:14.18-alpine
     working_dir: /app
     volumes:
@@ -14,7 +14,7 @@ services:
       - "db"
   
   db:
-    container_name: desafio_mutual_db
+    container_name: bank_ddd_prototype_db
     image: postgres
     restart: always
     volumes:

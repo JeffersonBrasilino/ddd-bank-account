@@ -12,11 +12,16 @@ export class MovementMapper {
    * o retorno do banco de dados no dominio
    */
   static toDomain(rawData: Partial<any>): Movement {
-    return Movement.create({
+    const movementOrError = Movement.create({
       id: rawData.id,
       value: parseFloat(rawData.value),
       createdAt: rawData.createdAt,
     });
+    movementOrError.isSuccess != true
+      ? console.log(movementOrError.getError())
+      : null;
+
+    return movementOrError.getValue();
   }
 
   /**

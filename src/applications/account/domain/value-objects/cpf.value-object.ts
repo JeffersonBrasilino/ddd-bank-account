@@ -1,3 +1,4 @@
+import { Result } from '@core/shared/result';
 import { ValueObject } from '@core/domain/value-object';
 
 export class CpfValueObject extends ValueObject {
@@ -10,9 +11,6 @@ export class CpfValueObject extends ValueObject {
 
   private constructor(value: string) {
     super();
-    if (!value) throw Error('cpf nao pode ser vazio.');
-    if (CpfValueObject.isValid(value) == false) throw new Error('cpf invalido');
-
     this._cpf = CpfValueObject.normalize(value);
   }
 
@@ -25,7 +23,12 @@ export class CpfValueObject extends ValueObject {
     return value.replace(new RegExp(/[^0-9]/g), '');
   }
 
-  static create(value: string): CpfValueObject {
-    return new CpfValueObject(value);
+  static create(value: string): Result<CpfValueObject> {
+    if (!value) return Result.fail<CpfValueObject>('cpf nao pode ser vazio.');
+
+    if (CpfValueObject.isValid(value) == false)
+      return Result.fail<CpfValueObject>('cpf invalido');
+
+    return Result.ok<CpfValueObject>(new CpfValueObject(value));
   }
 }
