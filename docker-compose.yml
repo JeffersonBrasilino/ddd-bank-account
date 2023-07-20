@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  db:
+    image: postgres
+    container_name: ${API_NAME}-db
+    environment:
+      POSTGRES_PASSWORD: "root"
+    volumes:
+      - /var/lib/postgresql:/var/lib/postgresql
+    ports:
+      - "15432:5432"
+    networks:
+      - app_network
+
+  api-dev:
+    container_name: ${API_NAME}-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    networks:
+      - app_network
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    depends_on:
+      - db
+
+networks:
+  app_network:
+    driver: bridge

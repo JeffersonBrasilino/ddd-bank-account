@@ -1,0 +1,9 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+echo '######## ANALISANDO CODIGO ANTES DE COMMITAR(TÁ ACHANDO QUE AQUI É BRINCADEIRA?) ########'
+cd app
+echo '>>>>>>>>>> VERIFICANDO CODIGO COM LINT... <<<<<<<<<<'
+npm run lint
+
+echo '>>>>>>>>>> EXECUTANDO TESTES GERAIS NO SERVICO... <<<<<<<<<<'
+npm run test:module
