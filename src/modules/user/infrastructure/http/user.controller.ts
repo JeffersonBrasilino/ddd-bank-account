@@ -1,64 +1,25 @@
 import { ActionFactory } from '@core/application';
-import { InvalidDataError } from '@core/application/errors/invalid-data.error';
-import { DataNotFoundError } from '@core/infrastructure/errors';
-import {
-  HttpResponse,
-  HttpResponseProps,
-} from '@core/infrastructure/http/http-response';
-import {
-  Body,
-  Controller,
-  Header,
-  Headers,
-  Inject,
-  Post,
-} from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { actions } from '../cqrs/actions.types';
-import { LoginRequestDto } from './dtos/requests/login-request.dto';
-import { RecoveryPasswordSendCodeRequest } from './dtos/requests/recovery-password-send-code.request';
-import { RecoveryPasswordCheckCodeRequest } from './dtos/requests/recovery-password-check-code.request';
+import { AbstractController } from '@core/infrastructure/http';
+import { HttpResponse } from '@core/infrastructure/http/http-response';
 import { PublicRoute } from '@core/infrastructure/http/nestjs/decorators/public-route';
+import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { actions } from '../cqrs/actions.types';
+import { RecoveryPasswordCheckCodeRequest } from './dtos/requests/recovery-password-check-code.request';
+import { RecoveryPasswordSendCodeRequest } from './dtos/requests/recovery-password-send-code.request';
 
 const controllerName = 'user';
 @ApiTags(controllerName)
 @Controller(controllerName)
 @PublicRoute()
-export class UserController {
+export class UserController extends AbstractController {
   constructor(
     private cb: CommandBus,
     @Inject('ActionFactory') private commandFactory: ActionFactory<actions>,
-  ) {}
-  @Post('login')
-  @ApiOperation({
-    summary: 'Login de Usuário',
-    description: 'Realiza o login do usuário',
-  })
-  @ApiResponse({
-    status: 200,
-    content: {
-      json: { example: { status: 200, data: 'hash do token' } },
-    },
-    description: 'Quando o login for bem sucedido.',
-  })
-  @ApiResponse({
-    status: 400,
-    content: {
-      json: { example: { status: 400, data: 'Usuário ou senha incorretas' } },
-    },
-    description: 'Quando o usuário ou a senha for incorretas.',
-  })
-  @ApiBody({ type: LoginRequestDto })
-  async login(@Body() data: LoginRequestDto): Promise<HttpResponseProps> {
-    const command = this.commandFactory.create('login', data);
-    const result = await this.cb.execute(command);
-    if (result.isFailure()) {
-      return this.processError(result.getError());
-    }
-    return HttpResponse.ok(result.getValue());
+  ) {
+    super();
   }
-
   @Post('recovery-password/send-code')
   @ApiOperation({
     summary: 'envia codigo de recuperar senha',
@@ -146,16 +107,5 @@ export class UserController {
       return this.processError(result.getError());
     }
     return HttpResponse.ok(result.getValue());
-  }
-
-  private processError(errorResult): HttpResponseProps {
-    switch (errorResult.constructor) {
-      case InvalidDataError:
-        return HttpResponse.badRequest(errorResult.getError());
-      case DataNotFoundError:
-        return HttpResponse.notFound(errorResult.getError());
-      default:
-        return HttpResponse.internalServerError(errorResult.getError());
-    }
   }
 }

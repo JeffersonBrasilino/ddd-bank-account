@@ -10,14 +10,20 @@ export class HttpClient {
   public constructor(public readonly baseUrl = '') {
     this.axios = axios.create({
       baseURL: baseUrl,
-      validateStatus: (status) => this.isValidStatus(status),
+      validateStatus: status => this.isValidStatus(status),
     });
   }
 
-  public async request(request: HttpClientRequest): Promise<HttpClientResponse> {
+  public async request(
+    request: HttpClientRequest,
+  ): Promise<HttpClientResponse> {
     const response = await this.axios.request(request);
 
-    return new HttpClientResponse(response.status, response.data, response.headers);
+    return new HttpClientResponse(
+      response.status,
+      response.data,
+      response.headers,
+    );
   }
 
   protected isValidStatus(status: number): boolean {

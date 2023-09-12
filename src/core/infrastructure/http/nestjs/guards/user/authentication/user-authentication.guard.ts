@@ -1,7 +1,7 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { PUBLIC_ROUTE } from '@core/infrastructure/http/nestjs/decorators/public-route';
+import { PUBLIC_ROUTE, PublicRouteOptions } from '@core/infrastructure/http/nestjs/decorators/public-route';
 
 @Injectable()
 export class UserAuthenticationGuard extends AuthGuard('auth-routes') {
@@ -13,7 +13,7 @@ export class UserAuthenticationGuard extends AuthGuard('auth-routes') {
     const isPublic = this.reflector.getAllAndOverride<any>(PUBLIC_ROUTE, [
       context.getHandler(),
       context.getClass(),
-    ]);
+    ]) as PublicRouteOptions;
     if (isPublic?.active === true) {
       return true;
     }

@@ -1,12 +1,14 @@
-import { InvalidDataError } from '@core/application/errors/invalid-data.error';
-import { DataNotFoundError } from '@core/infrastructure/errors';
 import {
   HttpResponse,
   HttpResponseProps,
 } from '@core/infrastructure/http/http-response';
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { Body, Controller, Get } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 const controllerName = 'test';
 @ApiTags(controllerName)
@@ -42,18 +44,10 @@ export class TestController {
     description: 'quando a verificacao do codigo falhar, ou userId nao existir',
   })
   async checkCodeRecoveryPassword(@Body() data: any) {
-    console.log('called!!!');
     return HttpResponse.ok('okokokokokokokook');
   }
 
   private processError(errorResult): HttpResponseProps {
-    switch (errorResult.constructor) {
-      case InvalidDataError:
-        return HttpResponse.badRequest(errorResult.getError());
-      case DataNotFoundError:
-        return HttpResponse.notFound(errorResult.getError());
-      default:
-        return HttpResponse.internalServerError(errorResult.getError());
-    }
+    return HttpResponse.internalServerError(errorResult.getError());
   }
 }

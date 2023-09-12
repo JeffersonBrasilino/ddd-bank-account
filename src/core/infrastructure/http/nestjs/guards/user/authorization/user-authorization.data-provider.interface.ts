@@ -1,4 +1,4 @@
-import { InfrastructureError } from '@core/infrastructure/errors';
+import { AbstractError } from '@core/domain/errors';
 
 export interface UserAuthorizationDataProviderInterface {
   checkPermissionRouteByUser(
@@ -6,5 +6,5 @@ export interface UserAuthorizationDataProviderInterface {
     route: string,
     action: string,
     publicKey: string,
-  ): Promise<boolean | InfrastructureError>;
+  ): Promise<boolean | AbstractError<any>>;
 }

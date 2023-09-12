@@ -12,6 +12,8 @@ export enum httpStatusCodes {
   FORBIDEN_CODE = 'FORBIDDEN',
   UNAUTORIZED_CODE = 'UNAUTHORIZED',
   INTERNAL_SERVER_ERROR_CODE = 'INTERNAL_SERVER_ERROR',
+  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
+  UNPROCESSABLE_ENTITY = 'UNPROCESSABLE_ENTITY',
 }
 export class HttpResponse {
   private static jsonResponse<TResponse>(
@@ -50,6 +52,16 @@ export class HttpResponse {
     );
   }
 
+  static serviceUnavailable<TResponse>(
+    data: any,
+  ): HttpResponseProps<TResponse> {
+    return HttpResponse.jsonResponse(
+      false,
+      httpStatusCodes.SERVICE_UNAVAILABLE,
+      data,
+    );
+  }
+
   static forbidden<TResponse>(data: any): HttpResponseProps<TResponse> {
     return HttpResponse.jsonResponse(
       false,
@@ -80,6 +92,16 @@ export class HttpResponse {
     return HttpResponse.jsonResponse(
       false,
       httpStatusCodes.INTERNAL_SERVER_ERROR_CODE,
+      data,
+    );
+  }
+
+  static unprocessableEntityError<TResponse>(
+    data: any,
+  ): HttpResponseProps<TResponse> {
+    return HttpResponse.jsonResponse(
+      false,
+      httpStatusCodes.UNPROCESSABLE_ENTITY,
       data,
     );
   }

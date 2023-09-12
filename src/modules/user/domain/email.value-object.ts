@@ -1,5 +1,5 @@
 import { ValueObject } from '@core/domain';
-import { DomainError } from '@core/domain/errors';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
 
 export class EmailValueObject extends ValueObject {
   private static EMAIL_REGES_VALIDATION =
@@ -19,9 +19,10 @@ export class EmailValueObject extends ValueObject {
     return errors;
   }
 
-  static create(value: string): EmailValueObject | DomainError {
+  static create(value: string): EmailValueObject | AbstractError<any> {
     const validation = EmailValueObject.validate(value);
-    if (validation.length > 0) return new DomainError(validation);
+    if (validation.length > 0)
+      return ErrorFactory.instance().create('InvalidData', validation);
 
     return new EmailValueObject(value);
   }

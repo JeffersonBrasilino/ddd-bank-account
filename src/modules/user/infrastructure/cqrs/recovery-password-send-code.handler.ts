@@ -6,9 +6,9 @@ import { CommandHandler } from '@nestjs/cqrs';
 @CommandHandler(RecoveryPasswordSendCodeCommand)
 export class RecoveryPasswordSendCodeHandler extends handler {
   constructor(
-    @Inject('UserRepositoryInterface') userRepo,
+    @Inject('SendCodeRecoveryPassword') repo,
     @Inject('EmailClient') emailClient,
   ) {
-    super(userRepo, emailClient);
+    super(repo, emailClient);
   }
 }

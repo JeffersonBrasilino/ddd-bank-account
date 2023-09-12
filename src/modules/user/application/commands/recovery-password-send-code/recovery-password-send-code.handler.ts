@@ -3,56 +3,61 @@ import {
   EmailClientInterface,
   SendEmailOptions,
 } from '@core/domain/contracts/email-client.interface';
-import {
-  DataNotFoundError,
-  InfrastructureError,
-} from '@core/infrastructure/errors';
-import { Result } from '@core/shared/result';
-import { UserRepositoryInterface } from '@module/user/domain/contracts/user-repository.interface';
-import { RecoveryPasswordSendCodeCommand } from './recovery-password-send-code.command';
-import { UserAggregateRoot } from '@module/user/domain/user.aggregate-root';
-import { DependencyError } from '@core/infrastructure/errors/dependency.error';
 
-type response = Result<any> | void;
+import { Result } from '@core/application/result';
+import { RecoveryPasswordSendCodeRepositoryInterface } from '@module/user/domain/contracts/recovery-password-send-code.repository.interface';
+import { UserAggregateRoot } from '@module/user/domain/user.aggregate-root';
+import { RecoveryPasswordSendCodeCommand } from './recovery-password-send-code.command';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
+
+type response = Result<AbstractError<any> | Partial<any>> | void;
 export class RecoveryPasswordSendCodeHandler
   implements ActionHandlerInterface<RecoveryPasswordSendCodeCommand, response>
 {
   constructor(
-    private userRepo: UserRepositoryInterface,
+    private sendCodeRepo: RecoveryPasswordSendCodeRepositoryInterface,
     private emailClient: EmailClientInterface,
   ) {}
   async execute(command: RecoveryPasswordSendCodeCommand): Promise<response> {
-    const resultOrError = (await this.userRepo.findUserRecoveryPassword(
+    const resultOrError = (await this.sendCodeRepo.findUserRecoveryPassword(
       command.username,
     )) as UserAggregateRoot;
-    if (resultOrError instanceof DataNotFoundError) {
-      return Result.failure<DataNotFoundError>(resultOrError);
+    if (resultOrError instanceof AbstractError) {
+      return Result.failure(resultOrError);
     }
 
     const recoveryCode = this.generateRecoveyPassword();
     resultOrError.setRecoveryCode(recoveryCode);
 
-    const resultRepo = await this.userRepo.saveRecoveryPasswordCode(
+    const resultRepo = await this.sendCodeRepo.save(
       resultOrError as UserAggregateRoot,
     );
 
-    if (resultRepo instanceof InfrastructureError) {
+    if (resultRepo instanceof AbstractError) {
       return Result.failure(resultRepo);
     }
     const email = (resultOrError as UserAggregateRoot)
       .getPerson()
-      .getContacts()[0]
-      .getDescription();
+      .getContacts()
+      .find(
+        contact =>
+          contact.isMain() == true && contact.getContactType().getId() == 1,
+      );
+    if (email == undefined)
+      return Result.failure(
+        ErrorFactory.instance().create('notFound', 'email not exists'),
+      );
+
     const sendEmailResult = await this.sendEmailRecoveryCode(
       recoveryCode,
-      email,
+      email.getDescription(),
     );
 
-    if (sendEmailResult instanceof DependencyError) {
+    if (sendEmailResult instanceof AbstractError) {
       return Result.failure(sendEmailResult);
     }
     return Result.success({
-      email: this.ofuschEmail(email),
+      email: this.ofuschEmail(email.getDescription()),
       userUuid: resultOrError.getUuid(),
     });
   }
@@ -64,7 +69,7 @@ export class RecoveryPasswordSendCodeHandler
   private async sendEmailRecoveryCode(
     recoveryCode: string,
     email: string,
-  ): Promise<Partial<any> | DependencyError> {
+  ): Promise<Partial<any> | AbstractError<any>> {
     const opt: SendEmailOptions = {
       to: email,
       subject:

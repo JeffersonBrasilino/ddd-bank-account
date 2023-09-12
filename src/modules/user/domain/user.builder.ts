@@ -1,130 +1,102 @@
-import { DomainError } from '@core/domain/errors';
+import { AbstractDomainBuilder } from '@core/domain/abstract-domain.builder';
 import { PasswordValueObject } from './password.value-object';
-import { PersonContactEntity } from './person-contact.entity';
-import { PersonEntity } from './person.entity';
+import {
+  PersonBuilder,
+  WithPersonContactsProps,
+} from './person/person.builder';
 import { UserGroupsEntity, UserGroupsEntitytProps } from './user-groups.entity';
 import {
   UserAggregateRoot,
   UserAggregateRootProps,
 } from './user.aggregate-root';
+import {
+  UserDevicesEntity,
+  UserDevicesEntitytProps,
+} from './user-devices.entity';
+import { PersonEntitytProps } from './person/person.entity';
+import { AbstractError } from '@core/domain/errors';
 
-export class UserBuilder {
-  private builderErrors = new Map<string, any>();
-  private constructor() {}
-  getBuilderErrors(): Map<string, any> {
-    return this.builderErrors;
+export type withPersonProps = Omit<PersonEntitytProps, 'contacts'> & {
+  contacts: WithPersonContactsProps[];
+  cpf: string;
+};
+
+export class UserBuilder extends AbstractDomainBuilder<
+  UserAggregateRoot,
+  UserAggregateRootProps
+> {
+  withPassword(password: string): this {
+    this.addFragment('password', {
+      value: password,
+      buildTo: PasswordValueObject,
+    });
+    return this;
   }
 
-  buildPassword(password: string): PasswordValueObject | void {
-    const passwordVo = PasswordValueObject.create(password);
+  withUsername(username: string): this {
+    this.addFragment('username', {
+      value: username,
+    });
+    return this;
+  }
 
-    if (passwordVo instanceof DomainError) {
-      this.builderErrors.set('password', passwordVo.getError());
-      return;
+  withPerson(data: withPersonProps): this {
+    const personBuilder = new PersonBuilder()
+      .withId(data.id)
+      .withUuId(data.uuid)
+      .withBirthDate(data.birthDate)
+      .withName(data.name)
+      .withCpf(data.cpf)
+      .withContacts(data.contacts)
+      .build();
+
+    if (personBuilder instanceof AbstractError) {
+      this.addErrorFragment('person', personBuilder);
+    } else {
+      this.addBuildedFragment('person', personBuilder);
     }
-    return passwordVo;
+    return this;
   }
 
-  buildUserGroups(rawUsersGroups: Array<any>): Array<UserGroupsEntity> | void {
-    //TODO: ADDED GROUP PERMISSIONS HERE
-    const errors = [];
-    const groups = rawUsersGroups.map((gp, i) => {
-      const instance = UserGroupsEntity.create({
-        ...gp.userGroup,
-        main: gp.main,
-      } as UserGroupsEntitytProps);
-      if (instance instanceof DomainError) {
-        errors.push({ arrayPosition: i, errors: instance.getError() });
+  withRecoveryCode(recoveryCode: string): this {
+    this.addFragment('recoveryCode', { value: recoveryCode });
+    return this;
+  }
+
+  withUserGroups(rawUsersGroups: UserGroupsEntitytProps[]): this {
+    const userGroupData = [];
+    rawUsersGroups.map((group, key) => {
+      const instance = UserGroupsEntity.create(group);
+      if (instance instanceof AbstractError) {
+        this.addErrorFragment(`UserGroupsEntity.${key}`, instance);
         return;
       }
-      return instance;
+      userGroupData.push(instance);
     });
-
-    if (errors.length > 0) {
-      this.builderErrors.set('usersGroup', errors);
-      return;
-    }
-    return groups;
+    this.addBuildedFragment('userGroups', userGroupData);
+    return this;
   }
 
-  buildPersonContact(data: Partial<any>): PersonContactEntity | void {
-    const contact = PersonContactEntity.create({
-      uuid: data.uuid,
-      description: data.description,
-      main: data.main,
-    });
-
-    if (contact instanceof DomainError) {
-      this.builderErrors.set('personContact', contact.getError());
-      return;
-    }
-    return contact;
-  }
-
-  buildPerson(rawData: Partial<any>): PersonEntity | void {
-    const errors = [];
-    const contacts = rawData.contacts.map((contact, i) => {
-      const instance = this.buildPersonContact(contact);
-      if (instance instanceof DomainError) {
-        errors.push({ arrayPosition: i, errors: instance.getError() });
+  withDevices(data: UserDevicesEntitytProps[]): this {
+    const userGroupData = [];
+    data.map((device, key) => {
+      const instance = UserDevicesEntity.create(device);
+      if (instance instanceof AbstractError) {
+        this.addErrorFragment(`UserDevicesEntity.${key}`, instance);
         return;
       }
-      return instance;
+      userGroupData.push(instance);
     });
-
-    if (errors.length > 0) {
-      this.builderErrors.set('PersonContacts', errors);
-      return;
-    }
-    const entity = PersonEntity.create({
-      uuid: rawData.uuid,
-      contacts: contacts,
-    });
-    if (entity instanceof DomainError) {
-      this.builderErrors.set('person', entity.getError());
-      return;
-    }
-    return entity;
+    this.addBuildedFragment('devices', userGroupData);
+    return this;
   }
 
-  static build(data?: Partial<any>): UserAggregateRoot | DomainError {
-    const buildInstance = new UserBuilder();
-    const userProps: UserAggregateRootProps = {
-      id: data.id,
-      username: data.username,
-    };
-
-    if (data.password) {
-      const passwordVo = buildInstance.buildPassword(data.password);
-      if (passwordVo != undefined) {
-        userProps.password = passwordVo as PasswordValueObject;
-      }
+  build(): UserAggregateRoot | AbstractError<any> {
+    const dataBuidedOrError = this.prepareFragmentsToBuild();
+    if (dataBuidedOrError instanceof AbstractError) {
+      return dataBuidedOrError;
     }
 
-    if (data.usersGroup) {
-      const usersGroup = buildInstance.buildUserGroups(data.usersGroup);
-      if (usersGroup != undefined) {
-        userProps.userGroups = usersGroup as UserGroupsEntity[];
-      }
-    }
-
-    if (data.person) {
-      const person = buildInstance.buildPerson(data.person);
-      if (person != undefined) {
-        userProps.person = person as PersonEntity;
-      }
-    }
-
-    if (data.uuid) {
-      userProps.uuid = data.uuid;
-    }
-
-    if (buildInstance.getBuilderErrors().size > 0) {
-      return new DomainError(
-        Object.fromEntries(buildInstance.getBuilderErrors()),
-      );
-    }
-
-    return UserAggregateRoot.create(userProps);
+    return UserAggregateRoot.create(dataBuidedOrError);
   }
 }

@@ -1,7 +1,7 @@
 import { UserAuthorizationDataProviderInterface } from '@core/infrastructure/http/nestjs/guards/user/authorization';
 import { UsersGroupsPermissionsEntity } from '../typeorm/entities/users-groups-permissions.entity';
 import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
-import { InfrastructureError } from '@core/infrastructure/errors';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
 
 export class UserAuthirizationRepository
   implements UserAuthorizationDataProviderInterface
@@ -11,7 +11,7 @@ export class UserAuthirizationRepository
     route: string,
     action: string,
     publicKey: string,
-  ): Promise<boolean | InfrastructureError> {
+  ): Promise<boolean | AbstractError<any>> {
     try {
       const result = await UsersGroupsPermissionsEntity.createQueryBuilder(
         'ugp',
@@ -67,7 +67,10 @@ export class UserAuthirizationRepository
         .getCount();
       return result > 0;
     } catch (err) {
-      return new InfrastructureError('error while checking permission');
+      return ErrorFactory.instance().create(
+        'InternalError',
+        'error while checking permission',
+      );
     }
   }
 }

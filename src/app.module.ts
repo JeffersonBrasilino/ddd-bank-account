@@ -16,7 +16,7 @@ import { appConfig } from './config/app.config';
 import { UserAuthirizationRepository } from '@module/user/infrastructure/database/repositories/user-authorization.repository';
 import { UserAuthorizationGuard } from '@core/infrastructure/http/nestjs/guards/user/authorization';
 import { ApplicationAuthenticationGuard } from '@core/infrastructure/http/nestjs/guards/application/application-authentication.guard';
-import { ApplicationAuthenticationRepository } from '@module/application/infrastructure/database/repositories/application-authentication.repository';
+import { ApplicationAuthenticationRepository } from '@module/system/infrastructure/database/repositories/application-authentication.repository';
 
 @Module({
   controllers: [AppController],

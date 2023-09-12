@@ -1,14 +1,16 @@
+import { AbstractError } from '@core/domain/errors';
 import {
   CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { PUBLIC_ROUTE } from '@core/infrastructure/http/nestjs/decorators/public-route';
+import {
+  PUBLIC_ROUTE,
+  PublicRouteOptions,
+} from '@core/infrastructure/http/nestjs/decorators/public-route';
 import { ApplicationGuardDataProviderInterface } from './application-guard.data-provider.interface';
-import { InfrastructureError } from '@core/infrastructure/errors';
 
 @Injectable()
 export class ApplicationAuthenticationGuard implements CanActivate {
@@ -21,7 +23,7 @@ export class ApplicationAuthenticationGuard implements CanActivate {
     const isPublic = this.reflector.getAllAndOverride<any>(PUBLIC_ROUTE, [
       context.getHandler(),
       context.getClass(),
-    ]);
+    ]) as PublicRouteOptions;
     if (isPublic?.checkAppAuthorization === false) {
       return true;
     }
@@ -34,7 +36,7 @@ export class ApplicationAuthenticationGuard implements CanActivate {
     const applicationId = await this.dataProvider.getApplicationByPublicKey(
       token,
     );
-    if (applicationId instanceof InfrastructureError) {
+    if (applicationId instanceof AbstractError) {
       throw new UnauthorizedException('invalid app-auth-token header');
     }
     return true;

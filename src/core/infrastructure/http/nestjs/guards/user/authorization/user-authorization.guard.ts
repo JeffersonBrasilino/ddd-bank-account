@@ -1,4 +1,7 @@
-import { PUBLIC_ROUTE } from '@core/infrastructure/http/nestjs/decorators/public-route';
+import {
+  PUBLIC_ROUTE,
+  PublicRouteOptions,
+} from '@core/infrastructure/http/nestjs/decorators/public-route';
 import {
   CanActivate,
   ExecutionContext,
@@ -7,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserAuthorizationDataProviderInterface } from './user-authorization.data-provider.interface';
-import { InfrastructureError } from '@core/infrastructure/errors';
+import { AbstractError } from '@core/domain/errors';
 
 @Injectable()
 export class UserAuthorizationGuard implements CanActivate {
@@ -20,7 +23,7 @@ export class UserAuthorizationGuard implements CanActivate {
     const isPublic = this.reflector.getAllAndOverride<any>(PUBLIC_ROUTE, [
       context.getHandler(),
       context.getClass(),
-    ]);
+    ]) as PublicRouteOptions;
     if (isPublic?.active === true) {
       return true;
     }
@@ -36,7 +39,7 @@ export class UserAuthorizationGuard implements CanActivate {
       method,
       appToken,
     );
-    if (permission instanceof InfrastructureError) {
+    if (permission instanceof AbstractError) {
       throw new ForbiddenException('error checking permissions for user');
     }
 

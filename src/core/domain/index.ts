@@ -1,4 +1,5 @@
 export { AggregateRoot } from './aggregate-root';
+export { AbstractDomainBuilder } from './abstract-domain.builder';
 export { DomainEvent } from './domain-event';
 export { Entity } from './entity';
 export { ValueObject } from './value-object';

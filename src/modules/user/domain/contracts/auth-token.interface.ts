@@ -1,3 +1,5 @@
 export interface AuthTokenInterface {
-  generate(embededData: Partial<any>): string;
+  generateAuthToken(embededData: Partial<any>): string;
+  generateRefreshToken(embededData: Partial<any>): string;
+  validateRefreshToken(refreshToken: string);
 }

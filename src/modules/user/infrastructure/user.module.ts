@@ -1,20 +1,28 @@
 import { ActionFactory } from '@core/application';
+import { AwsEmailClient } from '@core/infrastructure/email-client/aws-email-client';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule, JwtService } from '@nestjs/jwt';
+import { AwsEmailConfig } from 'src/config/aws-email.config';
 import { UserMapper } from '../mapper/user.mapper';
 import { JwtAuthToken } from './auth-token/jwt.auth-token';
 import { ACTIONS, actions } from './cqrs/actions.types';
 import { LoginCommandHandler } from './cqrs/login-command.handler';
+import { RecoveryPasswordNewPasswordHandler } from './cqrs/recovery-password-new-password.handler';
+import { RecoveryPasswordSendCodeHandler } from './cqrs/recovery-password-send-code.handler';
+import { UserExistsQueryHandler } from './cqrs/user-exists.query.handler';
+import { UserSaveFirstLoginHandler } from './cqrs/user-save-first-login.handler';
 import { BCryptBassword } from './crypt-password/bcrypt-password';
 import { UserRepository } from './database/repositories/user.repository';
-import { UserController } from './http/user.controller';
-import { RecoveryPasswordSendCodeHandler } from './cqrs/recovery-password-send-code.handler';
-import { AwsEmailConfig } from 'src/config/aws-email.config';
-import { AwsEmailClient } from '@core/infrastructure/email-client/aws-email-client';
-import { RecoveryPasswordNewPasswordHandler } from './cqrs/recovery-password-new-password';
+import { UserExistsGateway } from './gateway/user-exists.gateway';
 import { TestController } from './http/test.controller';
+import { UserExistsController } from './http/user-exists/user-exists.controller';
+import { UserSaveFirstLoginController } from './http/user-save-first-login/user-save-first-login.controller';
+import { UserController } from './http/user.controller';
+import { LoginController } from './http/login/login.controller';
+import { RefreshAuthTokenController } from './http/refresh-auth-token/refresh-auth-token.controller';
+import { RefreshAuthTokenHandler } from './cqrs/refresh-auth-token.handler';
 
 @Module({
   imports: [
@@ -33,11 +41,21 @@ import { TestController } from './http/test.controller';
       inject: [ConfigService],
     }),
   ],
-  controllers: [UserController, TestController],
+  controllers: [
+    UserController,
+    UserExistsController,
+    UserSaveFirstLoginController,
+    TestController,
+    LoginController,
+    RefreshAuthTokenController,
+  ],
   providers: [
     LoginCommandHandler,
     RecoveryPasswordSendCodeHandler,
     RecoveryPasswordNewPasswordHandler,
+    UserExistsQueryHandler,
+    UserSaveFirstLoginHandler,
+    RefreshAuthTokenHandler,
     UserMapper,
     ConfigService,
     {
@@ -45,7 +63,7 @@ import { TestController } from './http/test.controller';
       useFactory: () => new ActionFactory<actions>(ACTIONS),
     },
     {
-      provide: 'UserRepositoryInterface',
+      provide: 'UserRepository',
       useFactory: mapper => new UserRepository(mapper),
       inject: [UserMapper],
     },
@@ -55,13 +73,40 @@ import { TestController } from './http/test.controller';
     },
     {
       provide: 'AuthToken',
-      useFactory: jwtService => new JwtAuthToken(jwtService),
-      inject: [JwtService],
+      useFactory: (jwtService, configService) =>
+        new JwtAuthToken(jwtService, configService),
+      inject: [JwtService, ConfigService],
     },
     {
       provide: 'EmailClient',
       useFactory: config => new AwsEmailClient(config.get('aws-ses')),
       inject: [ConfigService],
+    },
+    {
+      provide: 'UserExistsGateway',
+      useFactory: mapper => new UserExistsGateway(mapper),
+      inject: [UserMapper],
+    },
+    {
+      provide: 'UserSaveFirstLoginRepository',
+      useExisting: 'UserRepository',
+    },
+    { provide: 'UserExistsRepository', useExisting: 'UserRepository' },
+    {
+      provide: 'LoginRepo',
+      useExisting: 'UserRepository',
+    },
+    {
+      provide: 'SendCodeRecoveryPassword',
+      useExisting: 'UserRepository',
+    },
+    {
+      provide: 'RecoveryPasswordNewPasswordRepositoryInterface',
+      useExisting: 'UserRepository',
+    },
+    {
+      provide: 'RefreshAuthTokenRepositoryInterface',
+      useExisting: 'UserRepository',
     },
   ],
   exports: [],

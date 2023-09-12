@@ -35,19 +35,25 @@ export class HttpClientResponse {
   }
 
   public isClientError(): boolean {
-    return this.statusCode >= HttpStatus.BAD_REQUEST && this.statusCode < HttpStatus.INTERNAL_SERVER_ERROR;
+    return (
+      this.statusCode >= HttpStatus.BAD_REQUEST &&
+      this.statusCode < HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
   public async getData<T extends object>(dataType: ClassType<T>): Promise<T> {
     const data: T = plainToClass(dataType, this.data);
     await validateOrReject(data);
     return data;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  public async getArrayData<T extends object>(dataType: ClassType<T>): Promise<T[]> {
-    assert(Array.isArray(this.data), 'Expected the data content to be an array');
+  public async getArrayData<T extends object>(
+    dataType: ClassType<T>,
+  ): Promise<T[]> {
+    assert(
+      Array.isArray(this.data),
+      'Expected the data content to be an array',
+    );
 
     const data: T[] = plainToInstance(dataType, this.data);
     await validateOrReject(data);
@@ -58,8 +64,10 @@ export class HttpClientResponse {
     return this.data;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  public async hasError<T extends object>(errorType: ClassType<T>, checker: (error: T) => boolean): Promise<boolean> {
+  public async hasError<T extends object>(
+    errorType: ClassType<T>,
+    checker: (error: T) => boolean,
+  ): Promise<boolean> {
     const error: T = plainToClass(errorType, this.data);
     const validationErrors = await validate(error);
 

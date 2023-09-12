@@ -1,6 +1,6 @@
 import { ValueObject } from '@core/domain';
-import { DomainError } from '@core/domain/errors';
 import { CryptPasswordInterface } from './contracts/crypt-password.interface';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
 
 export class PasswordValueObject extends ValueObject {
   private constructor(private value: string) {
@@ -14,9 +14,10 @@ export class PasswordValueObject extends ValueObject {
     return errors;
   }
 
-  static create(value: string): PasswordValueObject | DomainError {
+  static create(value: string): PasswordValueObject | AbstractError<any> {
     const validation = PasswordValueObject.validate(value);
-    if (validation.length > 0) return new DomainError(validation);
+    if (validation.length > 0)
+      return ErrorFactory.instance().create('InvalidData', validation);
 
     return new PasswordValueObject(value);
   }

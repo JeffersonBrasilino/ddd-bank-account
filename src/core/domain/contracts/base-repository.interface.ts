@@ -1,4 +1,5 @@
-import { InfrastructureError } from '../../infrastructure/errors/infrastructure.error';
+import { AbstractError } from '../errors';
+
 export type queryProps = {
   page?: number;
   perPage?: number;
@@ -14,13 +15,13 @@ export interface BaseRepositoryInterface<T> {
 
   list<TFilters extends queryProps>(
     filter?: TFilters,
-  ): Promise<InfrastructureError | any>;
+  ): Promise<AbstractError<any> | any>;
 
-  get(id: number | string): Promise<InfrastructureError | any>;
+  get(id: number | string): Promise<AbstractError<any> | any>;
 
-  find(filter: Partial<any>): Promise<InfrastructureError | T[]>;
+  find(filter: Partial<any>): Promise<AbstractError<any> | T[]>;
 
-  upsert(data: T): Promise<InfrastructureError | any>;
+  upsert(data: T): Promise<AbstractError<any> | any>;
 
   remove(filter: Partial<any>, soft: boolean): Promise<any>;
 

@@ -10,7 +10,7 @@ export class ActionFactory<Actions> {
   }
 
   public register(actions: actionProps): void {
-    Object.entries(actions).map((action) => {
+    Object.entries(actions).map(action => {
       this._actionsMap.set(action[0] as Actions, action[1]);
     });
   }
@@ -19,7 +19,10 @@ export class ActionFactory<Actions> {
     return this._actionsMap.has(action);
   }
 
-  public create<TDto>(action: Actions, props?: TDto): ActionHandlerInterface<any> {
+  public create<TDto>(
+    action: Actions,
+    props?: TDto,
+  ): ActionHandlerInterface<any> {
     if (!this.exists(action)) {
       throw new Error(`There is no handler for this action ${action}`);
     }

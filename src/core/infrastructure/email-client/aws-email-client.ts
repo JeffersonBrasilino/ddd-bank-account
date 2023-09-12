@@ -3,8 +3,7 @@ import {
   EmailClientInterface,
   SendEmailOptions,
 } from '../../domain/contracts/email-client.interface';
-import { DependencyError } from '../errors/dependency.error';
-import { InfrastructureError } from '../errors';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
 export type configProps = {
   awsSesKey: string;
   awsSesToken: string;
@@ -38,7 +37,7 @@ export class AwsEmailClient implements EmailClientInterface {
 
   async sendEmail(
     settings: SendEmailOptions,
-  ): Promise<Partial<any> | InfrastructureError> {
+  ): Promise<Partial<any> | AbstractError<any>> {
     try {
       const command = new SendEmailCommand({
         Destination: {
@@ -61,7 +60,7 @@ export class AwsEmailClient implements EmailClientInterface {
       const result = await this.SESinstance.send(command);
       return { success: !!result?.MessageId, response: result };
     } catch (err) {
-      return new DependencyError(err.toString());
+      return ErrorFactory.instance().create('DependencyError', err.toString());
     }
   }
 }

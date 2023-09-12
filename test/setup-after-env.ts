@@ -1,4 +1,4 @@
-import * as nock from 'nock';
+/* import * as nock from 'nock';
 
 global.afterAll(() => {
   if (typeof global.gc === 'function') {
@@ -8,3 +8,4 @@ global.afterAll(() => {
   nock.cleanAll();
   nock.restore();
 });
+ */

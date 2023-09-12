@@ -6,10 +6,10 @@ import { CommandHandler } from '@nestjs/cqrs';
 @CommandHandler(LoginCommand)
 export class LoginCommandHandler extends handler {
   constructor(
-    @Inject('UserRepositoryInterface') userRepo,
+    @Inject('LoginRepo') loginRepo,
     @Inject('CryptPassword') passwordCrypt,
     @Inject('AuthToken') jwtService,
   ) {
-    super(userRepo, passwordCrypt, jwtService);
+    super(loginRepo, passwordCrypt, jwtService);
   }
 }

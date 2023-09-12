@@ -2,7 +2,7 @@ import {
   BaseRepositoryInterface,
   queryProps,
 } from '@core/domain/contracts/base-repository.interface';
-import { InfrastructureError } from '@core/infrastructure/errors/infrastructure.error';
+import { AbstractError } from '@core/domain/errors';
 import { FindOptionsWhere } from 'typeorm';
 import { Repository } from 'typeorm/repository/Repository';
 export interface FilterProps {
@@ -35,20 +35,20 @@ export class TypeormBaseRepository<T> implements BaseRepositoryInterface<T> {
   }
   list<TFilters extends queryProps>(
     filter?: TFilters,
-  ): Promise<InfrastructureError | any> {
+  ): Promise<AbstractError<any> | any> {
     throw new Error('Method not implemented.');
   }
-  get(id: number | string): Promise<InfrastructureError | any> {
+  get(id: number | string): Promise<AbstractError<any> | any> {
     return this.baseRepository.findOne({
       where: { id } as FindOptionsWhere<any>,
     });
   }
-  find(filter: Partial<any>): Promise<InfrastructureError | T[]> {
+  find(filter: Partial<any>): Promise<AbstractError<any> | T[]> {
     return this.baseRepository.find({
       where: filter as FindOptionsWhere<any>,
     });
   }
-  upsert(data: T): Promise<InfrastructureError | any> {
+  upsert(data: T): Promise<AbstractError<any> | any> {
     return this.baseRepository.save(data);
   }
   remove(data: Partial<any>, soft = true): Promise<any> {
