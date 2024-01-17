@@ -60,7 +60,7 @@ export class AwsEmailClient implements EmailClientInterface {
       const result = await this.SESinstance.send(command);
       return { success: !!result?.MessageId, response: result };
     } catch (err) {
-      return ErrorFactory.instance().create('DependencyError', err.toString());
+      return ErrorFactory.create('Dependency', err.toString());
     }
   }
 }

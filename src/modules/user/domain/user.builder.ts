@@ -1,5 +1,8 @@
 import { AbstractDomainBuilder } from '@core/domain/abstract-domain.builder';
-import { PasswordValueObject } from './password.value-object';
+import {
+  PasswordValueObject,
+  passwordValueObjectProps,
+} from './password.value-object';
 import {
   PersonBuilder,
   WithPersonContactsProps,
@@ -25,7 +28,7 @@ export class UserBuilder extends AbstractDomainBuilder<
   UserAggregateRoot,
   UserAggregateRootProps
 > {
-  withPassword(password: string): this {
+  withPassword(password: passwordValueObjectProps): this {
     this.addFragment('password', {
       value: password,
       buildTo: PasswordValueObject,

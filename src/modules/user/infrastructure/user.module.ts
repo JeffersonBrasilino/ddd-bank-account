@@ -1,5 +1,6 @@
 import { ActionFactory } from '@core/application';
 import { AwsEmailClient } from '@core/infrastructure/email-client/aws-email-client';
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -11,22 +12,23 @@ import { ACTIONS, actions } from './cqrs/actions.types';
 import { LoginCommandHandler } from './cqrs/login-command.handler';
 import { RecoveryPasswordNewPasswordHandler } from './cqrs/recovery-password-new-password.handler';
 import { RecoveryPasswordSendCodeHandler } from './cqrs/recovery-password-send-code.handler';
+import { RefreshAuthTokenHandler } from './cqrs/refresh-auth-token.handler';
 import { UserExistsQueryHandler } from './cqrs/user-exists.query.handler';
 import { UserSaveFirstLoginHandler } from './cqrs/user-save-first-login.handler';
 import { BCryptBassword } from './crypt-password/bcrypt-password';
-import { UserRepository } from './database/repositories/user.repository';
+import { UserRepository } from './database/typeorm/repositories/user.repository';
 import { UserExistsGateway } from './gateway/user-exists.gateway';
+import { LoginController } from './http/login/login.controller';
+import { RefreshAuthTokenController } from './http/refresh-auth-token/refresh-auth-token.controller';
 import { TestController } from './http/test.controller';
 import { UserExistsController } from './http/user-exists/user-exists.controller';
 import { UserSaveFirstLoginController } from './http/user-save-first-login/user-save-first-login.controller';
 import { UserController } from './http/user.controller';
-import { LoginController } from './http/login/login.controller';
-import { RefreshAuthTokenController } from './http/refresh-auth-token/refresh-auth-token.controller';
-import { RefreshAuthTokenHandler } from './cqrs/refresh-auth-token.handler';
 
 @Module({
   imports: [
     CqrsModule,
+    HttpModule,
     ConfigModule.forFeature(AwsEmailConfig()),
     JwtModule.registerAsync({
       useFactory: async (config: ConfigService) => {
@@ -81,11 +83,6 @@ import { RefreshAuthTokenHandler } from './cqrs/refresh-auth-token.handler';
       provide: 'EmailClient',
       useFactory: config => new AwsEmailClient(config.get('aws-ses')),
       inject: [ConfigService],
-    },
-    {
-      provide: 'UserExistsGateway',
-      useFactory: mapper => new UserExistsGateway(mapper),
-      inject: [UserMapper],
     },
     {
       provide: 'UserSaveFirstLoginRepository',

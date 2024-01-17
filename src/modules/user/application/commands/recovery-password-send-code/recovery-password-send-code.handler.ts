@@ -45,7 +45,7 @@ export class RecoveryPasswordSendCodeHandler
       );
     if (email == undefined)
       return Result.failure(
-        ErrorFactory.instance().create('notFound', 'email not exists'),
+        ErrorFactory.create('notFound', 'email not exists'),
       );
 
     const sendEmailResult = await this.sendEmailRecoveryCode(

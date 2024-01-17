@@ -1,6 +1,6 @@
 import { ActionHandlerInterface } from '@core/application';
-import { AbstractError, ErrorFactory } from '@core/domain/errors';
 import { Result } from '@core/application/result';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
 import { AuthTokenInterface } from '@module/user/domain/contracts/auth-token.interface';
 import { CryptPasswordInterface } from '@module/user/domain/contracts/crypt-password.interface';
 import { LoginRepositoryInterface } from '@module/user/domain/contracts/login.repository.interface';
@@ -11,7 +11,7 @@ type makeJwtReturnProps = {
   authToken: string;
   refreshToken: string;
 };
-type response = Result<AbstractError<any>> | Result<object> | void;
+type response = Result<AbstractError<any>> | Result<object> | void | any;
 export class LoginCommandHandler
   implements ActionHandlerInterface<LoginCommand, response>
 {
@@ -24,6 +24,7 @@ export class LoginCommandHandler
     const resultOrError = await this.loginRepo.getUserByUsername(
       command.username,
     );
+
     if (!(resultOrError instanceof UserAggregateRoot)) {
       return Result.failure(resultOrError);
     }
@@ -34,7 +35,7 @@ export class LoginCommandHandler
       )
     ) {
       return Result.failure(
-        ErrorFactory.instance().create('InvalidData', 'senha incorreta'),
+        ErrorFactory.create('InvalidData', 'senha incorreta'),
       );
     }
     const credencials = this.makeJwt(resultOrError, {
@@ -49,6 +50,7 @@ export class LoginCommandHandler
         command.deviceName ?? '',
         credencials,
       );
+
       if (deviceOrError instanceof AbstractError)
         return Result.failure(deviceOrError);
       resultOrError.addDevice(deviceOrError as UserDevicesEntity);

@@ -1,8 +1,8 @@
-import { AbstractError } from './abstract-error';
 import { ERRORS, ErrorsType } from './errors.type';
+import { AbstractError } from '@core/domain/errors';
 
 export class ErrorFactory {
-  private map: Map<ErrorsType, any> = new Map();
+  private map: Map<ErrorsType, AbstractError<any>> = new Map();
 
   private static classInstance?: ErrorFactory = null;
   private constructor() {
@@ -18,7 +18,10 @@ export class ErrorFactory {
 
   public register(): void {
     Object.entries(ERRORS).map(err => {
-      this.map.set(err[0] as ErrorsType, err[1]);
+      this.map.set(
+        err[0] as ErrorsType,
+        err[1] as unknown as AbstractError<any>,
+      );
     });
   }
 
@@ -26,17 +29,26 @@ export class ErrorFactory {
     return this.map.has(action);
   }
 
-  public create(type: ErrorsType, props?: any): AbstractError<ErrorsType> {
+  public static create(
+    type: ErrorsType,
+    ...props: any
+  ): AbstractError<ErrorsType> {
+    const errorFactoryInstance = ErrorFactory.instance();
+
+    const errorInstance = errorFactoryInstance.getErrorByType(type) as any;
+
+    return new errorInstance(...props);
+  }
+
+  public getErrorByType(type: ErrorsType): AbstractError<any> {
     if (!this.exists(type)) {
       throw new Error(`There is no error for this type ${type}`);
     }
 
-    const errorInstance = this.map.get(type);
-
-    return new errorInstance(props);
+    return this.map.get(type);
   }
 
-  public getActions() {
+  public getErrors() {
     return this.map.entries();
   }
 }

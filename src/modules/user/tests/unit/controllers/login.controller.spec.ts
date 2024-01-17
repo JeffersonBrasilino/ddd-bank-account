@@ -1,11 +1,10 @@
 import { ActionFactory } from '@core/application';
-import { DomainValidationError } from '@core/domain/errors';
-import { DataNotFoundError } from '@core/infrastructure/errors';
 import { Result } from '@core/application/result';
 import { ACTIONS, actions } from '@module/user/infrastructure/cqrs';
 import { LoginController } from '@module/user/infrastructure/http/login/login.controller';
 import { CommandBus } from '@nestjs/cqrs';
 import { UserStub } from '../../stubs/user.stub';
+import { ErrorFactory } from '@core/domain/errors';
 
 describe('loginController', () => {
   let sut: LoginController;
@@ -16,12 +15,8 @@ describe('loginController', () => {
       execute: jest
         .fn()
         .mockReturnValueOnce(Result.success('success'))
-        .mockReturnValueOnce(
-          Result.failure(new DomainValidationError('error validation')),
-        )
-        .mockReturnValueOnce(
-          Result.failure(new DataNotFoundError('not Exists')),
-        ),
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('InvalidData')))
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('notFound'))),
     } as unknown as CommandBus;
     actionFactory = new ActionFactory<actions>(ACTIONS);
     sut = new LoginController(commandBus, actionFactory);

@@ -1,5 +1,5 @@
 import { UserAuthorizationDataProviderInterface } from '@core/infrastructure/http/nestjs/guards/user/authorization';
-import { UsersGroupsPermissionsEntity } from '../typeorm/entities/users-groups-permissions.entity';
+import { UsersGroupsPermissionsEntity } from '../entities/users-groups-permissions.entity';
 import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
 import { AbstractError, ErrorFactory } from '@core/domain/errors';
 
@@ -67,10 +67,7 @@ export class UserAuthirizationRepository
         .getCount();
       return result > 0;
     } catch (err) {
-      return ErrorFactory.instance().create(
-        'InternalError',
-        'error while checking permission',
-      );
+      return ErrorFactory.create('Internal', 'error while checking permission');
     }
   }
 }

@@ -1,3 +1,10 @@
 export { ErrorFactory } from './error.factory';
 export { ErrorsType } from './errors.type';
 export { AbstractError } from './abstract-error';
+export { AlreadyExistsError } from './already-exists.error';
+export { DependencyError } from './dependency.error';
+export { InternalError } from './internal.error';
+export { InvalidDataError } from './invalid-data.error';
+export { NotFoundError } from './not-found.error';
+export { ProcessingError } from './processing.error';
+export { ValidationError } from './validation.error';

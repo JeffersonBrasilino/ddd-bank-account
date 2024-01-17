@@ -27,12 +27,15 @@ export class RecoveryPasswordNewPasswordHandler
     if (resultOrError instanceof AbstractError) {
       return Result.failure(resultOrError);
     }
-    const hashPassword = PasswordValueObject.create(command.newPassword);
+    const hashPassword = PasswordValueObject.create({
+      value: command.newPassword,
+    });
+
     if (hashPassword instanceof AbstractError) {
       return Result.failure(hashPassword);
     }
     hashPassword.crypt(this.cryptPassword);
-    resultOrError.setPassword(hashPassword).setRecoveryCode(null);
+    resultOrError.setPassword(hashPassword);
     resultOrError.setRecoveryCode(null);
     const resultRepo = await this.userRepo.save(resultOrError);
 

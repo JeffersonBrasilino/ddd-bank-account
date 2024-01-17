@@ -1,31 +1,21 @@
-import { DomainValidationError } from '@core/domain/errors';
-import {
-  DataNotFoundError,
-  DependencyError,
-  InfrastructureError,
-} from '@core/infrastructure/errors';
 import { Result } from '@core/application/result';
-import { RecoveryPasswordNewPasswordHandler } from '@module/user/application/commands/recovery-password-new-password/recovery-password-new-password.handler';
+import { ErrorFactory } from '@core/domain/errors';
+import { DependencyError } from '@core/domain/errors/dependency.error';
+import { NotFoundError } from '@core/domain/errors/not-found.error';
 import { RecoveryPasswordSendCodeHandler } from '@module/user/application/commands/recovery-password-send-code/recovery-password-send-code.handler';
-import { CryptPasswordInterface } from '@module/user/domain/contracts/crypt-password.interface';
-import { RecoveryPasswordNewPasswordRepositoryInterface } from '@module/user/domain/contracts/recovery-password-new-password.repository.interface';
-import { UserMapper } from '@module/user/mapper/user.mapper';
-import { CryptPasswordMock } from '../../mocks/crypt-password.mock';
-import { UserRepositoryMock } from '../../mocks/user.repository.mock';
-import { UserStub } from '../../stubs/user.stub';
-import { RecoveryPasswordSendCodeRepositoryInterface } from '@module/user/domain/contracts/recovery-password-send-code.repository.interface';
-import { EmailClientInterface } from '@core/domain/contracts/email-client.interface';
 import { SendEmailMock } from '../../mocks/send-email.mock';
+import { userRepo } from '../../mocks/user.repository.mock';
+import { UserStub } from '../../stubs/user.stub';
 
 describe('RecoveryPasswordSendCodeHandler', () => {
   let sut: RecoveryPasswordSendCodeHandler;
-  let repo: RecoveryPasswordSendCodeRepositoryInterface;
-  let email: EmailClientInterface;
   beforeAll(() => {
-    repo = new UserRepositoryMock(new UserMapper());
-    email = new SendEmailMock();
-    sut = new RecoveryPasswordSendCodeHandler(repo, email);
+    sut = new RecoveryPasswordSendCodeHandler(userRepo, SendEmailMock);
   });
+    beforeEach(() => {
+      jest.restoreAllMocks();
+    });
+
 
   it('should be defined', () => {
     expect(sut).toBeDefined();
@@ -48,13 +38,13 @@ describe('RecoveryPasswordSendCodeHandler', () => {
     )) as Result<any>;
     expect(response).toBeInstanceOf(Result);
     expect(response.isFailure()).toBe(true);
-    expect(response.getError()).toBeInstanceOf(DataNotFoundError);
+    expect(response.getError()).toBeInstanceOf(NotFoundError);
   });
 
   it('should be error recovery password with send email failed', async () => {
     jest
       .spyOn(sut as any, 'sendEmailRecoveryCode') //only private method access
-      .mockReturnValue(new DependencyError('huehue'));
+      .mockReturnValue(ErrorFactory.create('Dependency'));
     const response = (await sut.execute(
       UserStub.recoveryPasswordSendCodeCommandStub(),
     )) as Result<any>;
@@ -63,15 +53,24 @@ describe('RecoveryPasswordSendCodeHandler', () => {
     expect(response.getError()).toBeInstanceOf(DependencyError);
   });
 
+  it('should be error recovery password with not found email', async () => {
+    const response = (await sut.execute(
+      UserStub.recoveryPasswordSendCodeCommandStub('not_found_email'),
+    )) as Result<any>;
+    expect(response).toBeInstanceOf(Result);
+    expect(response.isFailure()).toBe(true);
+    expect(response.getError()).toBeInstanceOf(NotFoundError);
+  });
+
   it('should be error recovery password with persist recovery code', async () => {
     jest
-      .spyOn(repo as any, 'save') //only private method access
-      .mockReturnValue(new InfrastructureError('huehue'));
+      .spyOn(userRepo as any, 'save') //only private method access
+      .mockReturnValue(ErrorFactory.create('Dependency'));
     const response = (await sut.execute(
       UserStub.recoveryPasswordSendCodeCommandStub(),
     )) as Result<any>;
     expect(response).toBeInstanceOf(Result);
     expect(response.isFailure()).toBe(true);
-    expect(response.getError()).toBeInstanceOf(InfrastructureError);
+    expect(response.getError()).toBeInstanceOf(DependencyError);
   });
 });

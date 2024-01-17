@@ -1,32 +1,57 @@
 import { ValueObject } from '@core/domain';
 import { CryptPasswordInterface } from './contracts/crypt-password.interface';
 import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import {
+  DomainValidatorFactory,
+  domainValidatorSchemaProps,
+} from '@core/domain/validator/domain-validator.factory';
+import { RequiredValidator } from '@core/domain/validator';
+import { RegexValidator } from '@core/domain/validator/regex.validator';
+import { ValidationError } from '@core/domain/errors/validation.error';
 
+export type passwordValueObjectProps = {
+  value: string;
+  alreadyValidated?: boolean;
+};
 export class PasswordValueObject extends ValueObject {
-  private constructor(private value: string) {
+  private constructor(private props: passwordValueObjectProps) {
     super();
   }
 
-  private static validate(value: string): Array<string> {
-    const errors = [];
-    if (value == undefined || value == null)
-      errors.push('invalid password: is empty string');
-    return errors;
+  private static validate(
+    value: passwordValueObjectProps,
+  ): boolean | ValidationError {
+    const validateProps: domainValidatorSchemaProps = {
+      value: [
+        new RequiredValidator(),
+        new RegexValidator(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        ),
+      ],
+    };
+    const validation = DomainValidatorFactory.create(validateProps);
+    if (validation.validate(value) == false) {
+      return ErrorFactory.create('Validation', validation.getErrors());
+    }
+    return true;
   }
 
-  static create(value: string): PasswordValueObject | AbstractError<any> {
-    const validation = PasswordValueObject.validate(value);
-    if (validation.length > 0)
-      return ErrorFactory.instance().create('InvalidData', validation);
+  static create(
+    props: passwordValueObjectProps,
+  ): PasswordValueObject | AbstractError<any> {
+    if (!props.alreadyValidated) {
+      const valid = this.validate(props);
+      if (valid instanceof ValidationError) return valid;
+    }
 
-    return new PasswordValueObject(value);
+    return new PasswordValueObject(props);
   }
 
-  getValue() {
-    return this.value;
+  getValue(): string {
+    return this.props.value;
   }
 
-  crypt(cryptStrategy: CryptPasswordInterface) {
-    this.value = cryptStrategy.crypt(this.value);
+  crypt(cryptStrategy: CryptPasswordInterface): void {
+    this.props.value = cryptStrategy.crypt(this.props.value);
   }
 }

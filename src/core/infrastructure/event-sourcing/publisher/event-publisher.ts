@@ -9,7 +9,10 @@ export class EventPublisher implements IEventPublisher {
   }
 
   private publishViaPublisher(event) {
-    const payload = ['string', 'number'].indexOf(typeof event) != -1 ? JSON.stringify(event) : event;
+    const payload =
+      ['string', 'number'].indexOf(typeof event) != -1
+        ? JSON.stringify(event)
+        : event;
     this.connection.send(event.constructor.name, payload);
   }
 }

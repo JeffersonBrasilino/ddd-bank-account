@@ -26,7 +26,7 @@ export class UserExistsQueryHandler
     if (personGateway instanceof UserAggregateRoot) {
       return Result.success({
         firstLogin: true,
-        ...this.userMpaper.toDto(personGateway, 'userExistsResponse'),
+        ...this.userMpaper.toDto(personGateway, 'userEistsResponse'),
       });
     }
     return Result.failure(personGateway);

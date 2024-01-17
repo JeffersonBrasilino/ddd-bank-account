@@ -1,22 +1,27 @@
 import { Entity, EntityProps } from '@core/domain/entity';
 import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { RequiredValidator } from '@core/domain/validator';
+import {
+  DomainValidatorFactory,
+  domainValidatorSchemaProps,
+} from '@core/domain/validator/domain-validator.factory';
 
 export type UserDevicesEntitytProps = {
+  authToken: string;
+  refreshToken: string;
   id?: number;
   deviceId?: string;
   deviceName?: string;
-  authToken?: string;
-  refreshToken?: string;
   status?: string;
 } & EntityProps;
 export class UserDevicesEntity extends Entity {
   private constructor(
     uuid: string,
+    private authToken: string,
+    private refreshToken: string,
     private id?: number,
     private deviceId?: string,
     private deviceName?: string,
-    private authToken?: string,
-    private refreshToken?: string,
     private status?: string,
   ) {
     super(uuid);
@@ -26,15 +31,15 @@ export class UserDevicesEntity extends Entity {
     props: UserDevicesEntitytProps,
   ): UserDevicesEntity | AbstractError<any> {
     const validation = UserDevicesEntity.validate(props);
-    if (validation != undefined) return validation;
+    if (validation instanceof AbstractError) return validation;
 
     return new UserDevicesEntity(
       props.uuid,
+      props.authToken,
+      props.refreshToken,
       props.id,
       props.deviceId,
       props.deviceName,
-      props.authToken,
-      props.refreshToken,
       props.status,
     );
   }
@@ -85,19 +90,18 @@ export class UserDevicesEntity extends Entity {
 
   private static validate(
     value: UserDevicesEntitytProps,
-  ): AbstractError<any> | undefined {
-    const errors = [];
-    if (value.deviceId == undefined || value.deviceId == null)
-      errors.push('deviceId has not been defined');
+  ): AbstractError<any> | boolean {
+    const validateUnit = new RequiredValidator();
+    const validateProps: domainValidatorSchemaProps = {
+      authToken: [validateUnit],
+      refreshToken: [validateUnit],
+      deviceId: [validateUnit],
+    };
+    const validation = DomainValidatorFactory.create(validateProps);
+    if (validation.validate(value) == false) {
+      return ErrorFactory.create('Validation', validation.getErrors());
+    }
 
-    if (value.authToken == undefined || value.authToken == null)
-      errors.push('authToken has not been defined');
-
-    if (value.refreshToken == undefined || value.refreshToken == null)
-      errors.push('refreshToken has not been defined');
-
-    return errors.length > 0
-      ? ErrorFactory.instance().create('InvalidData', errors)
-      : undefined;
+    return true;
   }
 }

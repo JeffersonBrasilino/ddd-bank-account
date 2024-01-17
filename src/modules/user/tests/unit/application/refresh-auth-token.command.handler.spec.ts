@@ -1,22 +1,18 @@
-import { DataNotFoundError } from '@core/infrastructure/errors';
-import { InvalidDataError } from '@core/infrastructure/errors/invalid-data.error';
 import { Result } from '@core/application/result';
+import { InvalidDataError } from '@core/domain/errors/invalid-data.error';
+import { NotFoundError } from '@core/domain/errors/not-found.error';
 import { RefreshAuthTokenHandler } from '@module/user/application/commands/refresh-auth-token/refresh-auth-token.handler';
-import { AuthTokenInterface } from '@module/user/domain/contracts/auth-token.interface';
-import { RefreshAuthTokenRepositoryInterface } from '@module/user/domain/contracts/refresh-auth-token.repository.interface';
-import { UserMapper } from '@module/user/mapper/user.mapper';
 import { AuthTokenMock } from '../../mocks/auth-token.mock';
-import { UserRepositoryMock } from '../../mocks/user.repository.mock';
+import { userRepo } from '../../mocks/user.repository.mock';
 import { UserStub } from '../../stubs/user.stub';
 
 describe('RefreshAuthTokenHandler', () => {
   let sut: RefreshAuthTokenHandler;
-  let repo: RefreshAuthTokenRepositoryInterface;
-  let authToken: AuthTokenInterface;
   beforeAll(() => {
-    repo = new UserRepositoryMock(new UserMapper());
-    authToken = new AuthTokenMock();
-    sut = new RefreshAuthTokenHandler(repo, authToken);
+    sut = new RefreshAuthTokenHandler(userRepo, AuthTokenMock);
+  });
+  beforeEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -47,6 +43,6 @@ describe('RefreshAuthTokenHandler', () => {
 
     expect(response).toBeInstanceOf(Result);
     expect(response.isFailure()).toBe(true);
-    expect(response.getError()).toBeInstanceOf(DataNotFoundError);
+    expect(response.getError()).toBeInstanceOf(NotFoundError);
   });
 });

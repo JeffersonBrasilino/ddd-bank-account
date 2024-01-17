@@ -1,25 +1,33 @@
 import { ValueObject } from '@core/domain';
 import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { MinLengthValidator, RequiredValidator } from '@core/domain/validator';
+import {
+  DomainValidatorFactory,
+  domainValidatorSchemaProps,
+} from '@core/domain/validator/domain-validator.factory';
 
 export class CpflValueObject extends ValueObject {
   private constructor(private readonly value: string) {
     super();
   }
 
-  private static validate(value: string): Array<string> {
-    const errors = [];
-    if (value == undefined || value == null) errors.push('CPF is empty');
-    if (value.length != 11) errors.push('CPF length is invalid');
-    if (!CpflValueObject.isValidCPF(value)) errors.push('CPF is not valid');
-
-    return errors;
+  private static validate(value: string): AbstractError<any> | boolean {
+    const validateProps: domainValidatorSchemaProps = {
+      value: [new RequiredValidator(), new MinLengthValidator(11)],
+    };
+    const validation = DomainValidatorFactory.create(validateProps);
+    if (validation.validate({ value }) == false) {
+      return ErrorFactory.create('Validation', validation.getErrors());
+    }
+    if (!CpflValueObject.isValidCPF(value))
+      return ErrorFactory.create('Validation', 'CPF is not valid');
+    return true;
   }
 
   static create(value: string): CpflValueObject | AbstractError<any> {
     value = CpflValueObject.removeSpecialCharacters(value);
     const validation = CpflValueObject.validate(value);
-    if (validation.length > 0)
-      ErrorFactory.instance().create('InvalidData', validation);
+    if (validation instanceof AbstractError) return validation;
 
     return new CpflValueObject(value);
   }

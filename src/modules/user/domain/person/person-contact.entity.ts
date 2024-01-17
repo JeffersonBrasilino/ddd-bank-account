@@ -23,8 +23,6 @@ export class PersonContactEntity extends Entity {
   static create(
     props: PersonContactEntitytProps,
   ): PersonContactEntity | AbstractError<any> {
-    const validate = PersonContactEntity.validate(props);
-    if (validate != true) return validate as AbstractError<any>;
     return new PersonContactEntity(
       props.uuid,
       props.description,
@@ -33,12 +31,7 @@ export class PersonContactEntity extends Entity {
       props.id,
     );
   }
-  static validate(props: PersonContactEntitytProps): AbstractError<any> | true {
-    const errors = [];
-    return errors.length > 0
-      ? ErrorFactory.instance().create('InvalidData', errors)
-      : true;
-  }
+
   getDescription(): string {
     return this.description;
   }

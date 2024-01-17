@@ -3,8 +3,8 @@ import {
   SendEmailOptions,
 } from '@core/domain/contracts/email-client.interface';
 
-export class SendEmailMock implements EmailClientInterface {
-  async sendEmail(settings: SendEmailOptions): Promise<any> {
+export const SendEmailMock: jest.Mocked<EmailClientInterface> = {
+  sendEmail: jest.fn(async (settings: SendEmailOptions) => {
     return true;
-  }
-}
+  }),
+};

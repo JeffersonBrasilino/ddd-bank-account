@@ -1,10 +1,10 @@
 import { CryptPasswordInterface } from '@module/user/domain/contracts/crypt-password.interface';
 
-export class CryptPasswordMock implements CryptPasswordInterface {
-  check(rawPassword: string, hashPassword: string): boolean {
+export const CryptPasswordMock: jest.Mocked<CryptPasswordInterface> = {
+  check: jest.fn((rawPassword: string, hashPassword: string) => {
     return rawPassword === hashPassword;
-  }
-  crypt(rawPassword: string): string {
+  }),
+  crypt: jest.fn((rawPassword: string) => {
     return 'cryptedPassword';
-  }
-}
+  }),
+};

@@ -1,11 +1,11 @@
 import { ActionFactory } from '@core/application';
-import { DomainValidationError } from '@core/domain/errors';
-import { DataNotFoundError } from '@core/infrastructure/errors';
+
 import { Result } from '@core/application/result';
 import { ACTIONS, actions } from '@module/user/infrastructure/cqrs';
 import { UserSaveFirstLoginController } from '@module/user/infrastructure/http/user-save-first-login/user-save-first-login.controller';
 import { CommandBus } from '@nestjs/cqrs';
 import { UserStub } from '../../stubs/user.stub';
+import { ErrorFactory } from '@core/domain/errors';
 
 describe('UserSaveFirstLoginController', () => {
   let sut: UserSaveFirstLoginController;
@@ -16,12 +16,8 @@ describe('UserSaveFirstLoginController', () => {
       execute: jest
         .fn()
         .mockReturnValueOnce(Result.success('success'))
-        .mockReturnValueOnce(
-          Result.failure(new DomainValidationError('error validation')),
-        )
-        .mockReturnValueOnce(
-          Result.failure(new DataNotFoundError('not Exists')),
-        ),
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('InvalidData')))
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('notFound'))),
     } as unknown as CommandBus;
     actionFactory = new ActionFactory<actions>(ACTIONS);
     sut = new UserSaveFirstLoginController(commandBus, actionFactory);

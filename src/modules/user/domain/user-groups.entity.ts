@@ -1,5 +1,5 @@
 import { Entity, EntityProps } from '@core/domain/entity';
-import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { AbstractError } from '@core/domain/errors';
 
 export type UserGroupsEntitytProps = {
   id?: number;
@@ -23,8 +23,6 @@ export class UserGroupsEntity extends Entity {
   static create(
     props: UserGroupsEntitytProps,
   ): UserGroupsEntity | AbstractError<any> {
-    const validate = UserGroupsEntity.validate(props);
-    if (validate != true) return validate as AbstractError<any>;
     return new UserGroupsEntity(
       props.uuid,
       props.id,
@@ -33,14 +31,6 @@ export class UserGroupsEntity extends Entity {
       props.main,
       props.userGroupUserId,
     );
-  }
-  static validate(props: UserGroupsEntitytProps): AbstractError<any> | true {
-    const errors = [];
-    if (props.name) errors.push('error: name has setted');
-
-    return errors.length > 0
-      ? ErrorFactory.instance().create('InvalidData', errors)
-      : true;
   }
   getId(): number {
     return this.id;

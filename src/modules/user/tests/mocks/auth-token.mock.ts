@@ -1,14 +1,14 @@
 import { ErrorFactory } from '@core/domain/errors';
 import { AuthTokenInterface } from '@module/user/domain/contracts/auth-token.interface';
 
-export class AuthTokenMock implements AuthTokenInterface {
-  generateAuthToken(embededData: Partial<any>): string {
+export const AuthTokenMock: jest.Mocked<AuthTokenInterface> = {
+  generateAuthToken: jest.fn((embededData: Partial<any>) => {
     return 'generateAuthToken';
-  }
-  generateRefreshToken(embededData: Partial<any>): string {
+  }),
+  generateRefreshToken: jest.fn((embededData: Partial<any>) => {
     return 'generateRefreshToken';
-  }
-  validateRefreshToken(refreshToken: string) {
+  }),
+  validateRefreshToken: jest.fn((refreshToken: string) => {
     if (refreshToken == 'refreshAuthToken' || refreshToken == 'not_exists') {
       return {
         userId: '90120c3d-4a8d-4421-a3ac-5d03a2fb53d8',
@@ -18,7 +18,7 @@ export class AuthTokenMock implements AuthTokenInterface {
         exp: 1691700515,
       };
     } else {
-      return ErrorFactory.instance().create('InvalidData', '');
+      return ErrorFactory.create('InvalidData', '');
     }
-  }
-}
+  }),
+};

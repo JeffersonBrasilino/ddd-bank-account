@@ -17,21 +17,15 @@ export class HttpResponseTransformInterceptor implements NestInterceptor {
   ): Observable<any> | Promise<Observable<any>> {
     return next.handle().pipe(
       map((data: HttpResponseProps) => {
-        const { status } = data;
-        if (!HttpStatus[status]) throw new Error('http status code invalido.');
-        if (HttpStatus[status].toString().match(/^5/))
-          throw new HttpException(data, HttpStatus[status]);
-        delete data.status;
+        if (data == undefined || !HttpStatus[data.status])
+          throw new Error('http status code invalido.');
+        if (HttpStatus[data.status].toString().match(/^5/))
+          throw new HttpException(data, HttpStatus[data.status]);
 
-        if (['NO_CONTENT'].indexOf(status as string) != -1) {
-          context.switchToHttp().getResponse().status(HttpStatus[status]);
-          return;
-        }
-        context
-          .switchToHttp()
-          .getResponse()
-          .status(HttpStatus[status])
-          .json(data.data);
+        const response = context.switchToHttp().getResponse();
+        response.status(HttpStatus[data.status]);
+        response.type('json');
+        return JSON.stringify(data?.data) ?? undefined;
       }),
     );
   }

@@ -1,10 +1,17 @@
 import { AggregateRoot } from '@core/domain';
 import { EntityProps } from '@core/domain/entity';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { ValidationError } from '@core/domain/errors/validation.error';
+import {
+  DomainValidatorFactory,
+  domainValidatorSchemaProps,
+} from '@core/domain/validator/domain-validator.factory';
+import { RequiredValidator } from '@core/domain/validator/required.validator';
 import { PasswordValueObject } from './password.value-object';
-import { UserGroupsEntity } from './user-groups.entity';
 import { PersonEntity } from './person/person.entity';
 import { UserDevicesEntity } from './user-devices.entity';
-import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { UserGroupsEntity } from './user-groups.entity';
+import { InstanceOfValidator } from '@core/domain/validator';
 
 export type UserAggregateRootProps = {
   id?: string | number;
@@ -18,13 +25,13 @@ export type UserAggregateRootProps = {
 export class UserAggregateRoot extends AggregateRoot {
   private constructor(
     uuid: string,
+    private username: string,
+    private password: PasswordValueObject,
     private id?: string | number,
-    private username?: string,
-    private password?: PasswordValueObject,
     private userGroups?: Array<UserGroupsEntity>,
     private person?: PersonEntity,
     private recoveryCode?: string,
-    private devices?: UserDevicesEntity[],
+    private devices: UserDevicesEntity[] = [],
   ) {
     super(uuid);
   }
@@ -32,16 +39,38 @@ export class UserAggregateRoot extends AggregateRoot {
   static create(
     props: UserAggregateRootProps,
   ): UserAggregateRoot | AbstractError<any> {
+    if (props.uuid == undefined) {
+      const valid = this.validate(props);
+      if (valid instanceof ValidationError) return valid;
+    }
+
     return new UserAggregateRoot(
       props.uuid,
-      props.id,
       props.username,
       props.password,
+      props.id,
       props.userGroups,
       props.person,
       props.recoveryCode,
       props.devices,
     );
+  }
+
+  private static validate(
+    data: UserAggregateRootProps,
+  ): boolean | ValidationError {
+    const validateProps: domainValidatorSchemaProps = {
+      username: [new RequiredValidator()],
+      /*  password: [
+        new RequiredValidator(),
+        new InstanceOfValidator(PasswordValueObject),
+      ], */
+    };
+    const validation = DomainValidatorFactory.create(validateProps);
+    if (validation.validate(data) == false) {
+      return ErrorFactory.create('Validation', validation.getErrors());
+    }
+    return true;
   }
 
   public getUsername(): string {
@@ -79,7 +108,6 @@ export class UserAggregateRoot extends AggregateRoot {
   }
 
   public addDevice(device: UserDevicesEntity): UserAggregateRoot {
-    if (this.devices == undefined) this.devices = [];
     this.devices.push(device);
 
     return this;
@@ -92,13 +120,12 @@ export class UserAggregateRoot extends AggregateRoot {
   public getDeviceByDeviceId(
     deviceId: string,
   ): UserDevicesEntity | AbstractError<any> {
-    if (this.devices == undefined) this.devices = [];
     const device = this.devices.find(
       addedDevice => addedDevice.getDeviceId() == deviceId,
     );
 
     if (device == undefined) {
-      return ErrorFactory.instance().create(
+      return ErrorFactory.create(
         'notFound',
         `device ${deviceId} has not found`,
       );

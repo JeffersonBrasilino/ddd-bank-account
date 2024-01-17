@@ -23,7 +23,7 @@ export class JwtAuthToken implements AuthTokenInterface {
       };
       return this.service.verify(refreshToken, options);
     } catch (e) {
-      return ErrorFactory.instance().create('InvalidData', e.toString());
+      return ErrorFactory.create('InvalidData', e.toString());
     }
   }
 }

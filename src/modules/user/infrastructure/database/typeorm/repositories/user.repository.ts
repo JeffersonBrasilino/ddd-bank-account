@@ -5,9 +5,10 @@ import { RefreshAuthTokenRepositoryInterface } from '@module/user/domain/contrac
 import { UserSaveFirstLoginRepositoryInterface } from '@module/user/domain/contracts/user-save-first-login.repository.interface';
 import { UserAggregateRoot } from '@module/user/domain/user.aggregate-root';
 import { UserMapper } from '@module/user/mapper/user.mapper';
-import { PersonEntity } from '../typeorm/entities/person.entity';
-import { UsersEntity } from '../typeorm/entities/users.entity';
+import { PersonEntity } from '../entities/person.entity';
+import { UsersEntity } from '../entities/users.entity';
 import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { DeepPartial } from 'typeorm';
 
 export class UserRepository
   implements
@@ -22,16 +23,10 @@ export class UserRepository
     try {
       const result = await PersonEntity.findOneBy({ cpf });
       return result != null
-        ? ErrorFactory.instance().create(
-            'conflict',
-            'already exists in the database',
-          )
+        ? ErrorFactory.create('AlreadyExists', 'already exists in the database')
         : true;
     } catch (e) {
-      return ErrorFactory.instance().create(
-        'InternalError',
-        'error creating first login',
-      );
+      return ErrorFactory.create('Internal', 'error creating first login');
     }
   }
   async findUserRecoveryPassword(
@@ -52,9 +47,9 @@ export class UserRepository
             usersGroup: undefined,
             devices: undefined,
           })
-        : ErrorFactory.instance().create('notFound', 'usuario nao encontrado');
+        : ErrorFactory.create('notFound', 'usuario nao encontrado');
     } catch (e) {
-      return ErrorFactory.instance().create('InternalError', e.toString());
+      return ErrorFactory.create('Internal', e.toString());
     }
   }
 
@@ -88,9 +83,9 @@ export class UserRepository
         .getOne();
       return userData != null
         ? this.mapper.toDomain(userData)
-        : ErrorFactory.instance().create('notFound', 'usuario nao encontrado');
+        : ErrorFactory.create('notFound', 'usuario nao encontrado');
     } catch (e) {
-      return ErrorFactory.instance().create('InternalError', e.toString());
+      return ErrorFactory.create('Internal', e.toString());
     }
   }
 
@@ -105,27 +100,30 @@ export class UserRepository
       });
       return userData != null
         ? this.mapper.toDomain(userData)
-        : ErrorFactory.instance().create(
+        : ErrorFactory.create(
             'notFound',
             'Código de verifiação ou usuário incorreto.',
           );
     } catch (e) {
-      return ErrorFactory.instance().create('InternalError', e.toString());
+      return ErrorFactory.create('Internal', e.toString());
     }
   }
 
-  async save(user: UserAggregateRoot): Promise<boolean | AbstractError<any>> {
+  async save(
+    user: UserAggregateRoot,
+  ): Promise<boolean | AbstractError<any> | any> {
     try {
       const userDb = await UsersEntity.findOneBy({ uuid: user.getUuid() });
+      const dataToSave = this.mapper.toPersistence(user);
       if (userDb === null) {
-        await UsersEntity.create(this.mapper.toPersistence(user)).save();
+        await UsersEntity.create(dataToSave as DeepPartial<UsersEntity>).save();
         return true;
       }
-      Object.assign(userDb, this.mapper.toPersistence(user));
+      Object.assign(userDb, dataToSave);
       await userDb.save();
       return true;
     } catch (e) {
-      return ErrorFactory.instance().create('InternalError', e.toString());
+      return ErrorFactory.create('Internal', e.toString());
     }
   }
 
@@ -134,12 +132,9 @@ export class UserRepository
       const result = await PersonEntity.findOneBy({ cpf });
       return result != null
         ? true
-        : ErrorFactory.instance().create('notFound', 'usuario nao encontrado');
+        : ErrorFactory.create('notFound', 'usuario nao encontrado');
     } catch (err) {
-      return ErrorFactory.instance().create(
-        'InternalError',
-        'error while checking permission',
-      );
+      return ErrorFactory.create('Internal', 'error while checking permission');
     }
   }
 
@@ -172,11 +167,11 @@ export class UserRepository
         .where('dev.refreshToken = :refreshToken', { refreshToken })
         .getOne();
       return result == null
-        ? ErrorFactory.instance().create('notFound', 'refresh token not found')
+        ? ErrorFactory.create('notFound', 'refresh token not found')
         : this.mapper.toDomain(result);
     } catch (e) {
-      return ErrorFactory.instance().create(
-        'InternalError',
+      return ErrorFactory.create(
+        'Internal',
         'error while checking refresh token',
       );
     }

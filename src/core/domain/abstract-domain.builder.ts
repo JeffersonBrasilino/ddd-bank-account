@@ -1,7 +1,6 @@
 import { AggregateRoot } from './aggregate-root';
 import { Entity } from './entity';
-import { AbstractError } from './errors';
-import { InternalError } from './errors/internal.error';
+import { AbstractError, ErrorFactory } from './errors';
 import { ValueObject } from './value-object';
 
 type FragmentProps = { buildTo?: object; value: any };
@@ -26,9 +25,8 @@ export abstract class AbstractDomainBuilder<TDomain, TDomainProps> {
         this.buildedFragments[key] = val.value;
       }
     }
-
     if (this.errors.size > 0) {
-      return new InternalError(Object.fromEntries(this.errors));
+      return ErrorFactory.create('Validation', Object.fromEntries(this.errors));
     }
     return this.buildedFragments;
   }

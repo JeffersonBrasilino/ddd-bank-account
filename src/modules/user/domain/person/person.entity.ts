@@ -23,8 +23,6 @@ export class PersonEntity extends Entity {
   }
 
   static create(props: PersonEntitytProps): PersonEntity | AbstractError<any> {
-    const validate = PersonEntity.validate(props);
-    if (validate != true) return validate as AbstractError<any>;
     return new PersonEntity(
       props.uuid,
       props.id,
@@ -33,13 +31,6 @@ export class PersonEntity extends Entity {
       props.name,
       props.birthDate,
     );
-  }
-  static validate(props: PersonEntitytProps): AbstractError<any> | boolean {
-    const errors = [];
-
-    return errors.length > 0
-      ? ErrorFactory.instance().create('InvalidData', errors)
-      : true;
   }
   getId(): number | string {
     return this.id;

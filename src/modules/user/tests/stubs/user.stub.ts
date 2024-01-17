@@ -20,6 +20,8 @@ import {
   RecoveryPasswordSendCodeCommand,
   RecoveryPasswordSendCodeCommandProps,
 } from '@module/user/application/commands/recovery-password-send-code/recovery-password-send-code.command';
+import { UserSaveFirstLoginCommand } from '@module/user/application/commands/user-save-first-login/user-save-first-login.command';
+import { UserExistsQuery } from '@module/user/application/queries/user-exists/user-exists.query';
 
 export class UserStub {
   static LoginControllerRequestStub(): LoginRequestDto {
@@ -107,7 +109,7 @@ export class UserStub {
     return new LoginCommand(props);
   }
 
-  static userAggregrateStub(): object {
+  static userAggregrateStub(): Record<string, any> {
     return {
       uuid: '90120c3d-4a8d-4421-a3ac-5d03a2fb53d8',
       id: 1,
@@ -116,7 +118,7 @@ export class UserStub {
       usersGroup: [
         {
           uuid: 'b6792ae3-2f4d-418e-9615-9cd27c22b0e5',
-          id: '1',
+          userGroup: { id: '1' },
           main: true,
           userGroupUserId: 14,
         },
@@ -128,14 +130,14 @@ export class UserStub {
           {
             uuid: '5a271d23-375d-462c-8eb7-cbad6f97379b',
             description: 'test@test.com.br',
-            contactType: null,
+            personContactType: { id: '1' },
             main: '1',
             id: '1',
           },
         ],
-        cpf: null,
-        name: null,
-        birthDate: null,
+        cpf: '47943096002',
+        name: 'null',
+        birthDate: '1994-01-01',
       },
       devices: [
         {
@@ -154,7 +156,7 @@ export class UserStub {
   }
 
   static recoveryPasswordNewPasswordCommandStub(
-    newPassword = 'newPassword',
+    newPassword = 'newPassword@1',
     userUuId = '90120c3d-4a8d-4421-a3ac-5d03a2fb53d8',
     verificationCode = '1234',
   ): RecoveryPasswordNewPasswordCommand {
@@ -173,5 +175,19 @@ export class UserStub {
       username,
     };
     return new RecoveryPasswordSendCodeCommand(props);
+  }
+
+  static saveFirstLoginCommandStub(cpf: string = '83390395806') {
+    return new UserSaveFirstLoginCommand({
+      name: 'dummy user',
+      cpf: cpf,
+      birthDate: '1972-02-01T00:00:00.000Z',
+      phone: '99999999999',
+      email: 'teste@teste',
+      password: 'Password@1',
+    });
+  }
+  static userExistsQueryStub(cpf: string = '54273132060') {
+    return new UserExistsQuery({ cpf });
   }
 }

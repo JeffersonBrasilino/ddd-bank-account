@@ -1,44 +1,47 @@
 import { ErrorFactory } from '@core/domain/errors';
+import { HttpClientInterface } from '@core/infrastructure/http/http-client';
 import { UserExistsGatewayInterface } from '@module/user/domain/contracts/user-exists.gateway.interface';
 import { UserMapper } from '@module/user/mapper/user.mapper';
 
 export class UserExistsGateway implements UserExistsGatewayInterface {
-  public constructor(private mapper: UserMapper) {}
+  public constructor(
+    private mapper: UserMapper,
+    private client: HttpClientInterface,
+  ) {}
   async getByCpf(cpf: string | number) {
     try {
-      if (cpf == '83390395806') {
-        const rawData = {
-          cpf: '83390395806',
-          nome: 'Pedro Henrique Fábio Osvaldo da Paz',
-          email: 'pedro.henrique.dapaz@imobideal.com',
-          data_nasc: new Date(1972, 1, 1),
-          celular: '83998916031',
-        };
-
-        return this.mapper.toDomain({
-          username: rawData.cpf,
-          password: null,
-          person: {
-            cpf: rawData.cpf,
-            name: rawData.nome,
-            birthDate: rawData.data_nasc,
-            contacts: [
-              {
-                description: rawData.email,
-                contactType: { id: 1 },
-              },
-              { description: '83998916031', contactType: { id: 2 } },
-            ],
-          },
-        });
-      }
-      return ErrorFactory.instance().create(
-        'notFound',
-        'usuario nao encontrado',
+      const res = await this.client.get<Record<string, any>>(
+        `/profissional/cpf/${cpf}/details`,
       );
+
+      if (
+        res.status == 404 ||
+        res.data.results == undefined ||
+        res.data.results.length == 0
+      ) {
+        return ErrorFactory.create('notFound', 'usuario nao encontrado');
+      }
+      const userData = res.data.results[0];
+      return this.mapper.toDomain({
+        username: userData.cpf,
+        password: null,
+        person: {
+          cpf: userData.cpf,
+          name: userData.profissional_nome,
+          birthDate: userData.dt_nascimento,
+          contacts: [
+            {
+              description: userData.email,
+              contactType: { id: 1 },
+            },
+            { description: userData.telefone, contactType: { id: 2 } },
+          ],
+        },
+      });
     } catch (e) {
-      return ErrorFactory.instance().create(
-        'InternalError',
+      console.log(e);
+      return ErrorFactory.create(
+        'Dependency',
         'error getting user from gateway',
       );
     }

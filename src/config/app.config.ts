@@ -14,9 +14,6 @@ export const appConfig = () =>
       apiAuthRefreshTokenSalt: process.env.API_AUTH_REFRESH_TOKEN_SALT,
       apiAuthRefreshTokenExpiration:
         process.env.API_AUTH_REFRESH_TOKEN_EXPIRATION,
-      apiPegasusHost: process.env.PEGASUS_HOST,
-      apiPegasusUsername: process.env.PEGASUS_USERNAME,
-      apiPegasusPassword: process.env.PEGASUS_PASSWORD,
     };
     const schema = Joi.object({
       env: Joi.string()
@@ -30,9 +27,6 @@ export const appConfig = () =>
       apiAuthTokenExpiration: Joi.string().required(),
       apiAuthRefreshTokenExpiration: Joi.string().required(),
       apiAuthRefreshTokenSalt: Joi.string().required(),
-      apiPegasusHost: Joi.string().required(),
-      apiPegasusUsername: Joi.string().required(),
-      apiPegasusPassword: Joi.string().required(),
     });
     const { error } = schema.validate(values, { abortEarly: false });
     if (error) {

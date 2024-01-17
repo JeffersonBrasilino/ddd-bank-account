@@ -1,12 +1,11 @@
 import { ActionHandlerInterface } from '@core/application';
 import { Result } from '@core/application/result';
+import { AbstractError } from '@core/domain/errors';
 import { CryptPasswordInterface } from '@module/user/domain/contracts/crypt-password.interface';
 import { UserSaveFirstLoginRepositoryInterface } from '@module/user/domain/contracts/user-save-first-login.repository.interface';
-import { CpflValueObject } from '@module/user/domain/person/person-cpf.value-object';
 import { UserAggregateRoot } from '@module/user/domain/user.aggregate-root';
 import { UserBuilder } from '@module/user/domain/user.builder';
 import { UserSaveFirstLoginCommand } from './user-save-first-login.command';
-import { AbstractError } from '@core/domain/errors';
 
 type response = Result<AbstractError<any> | boolean> | void | any;
 export class UserSaveFirstLoginHandler
@@ -17,11 +16,6 @@ export class UserSaveFirstLoginHandler
     private cryptPassword: CryptPasswordInterface,
   ) {}
   async execute(command: UserSaveFirstLoginCommand): Promise<response> {
-    const cpfOrError = CpflValueObject.create(command.cpf);
-    if (cpfOrError instanceof AbstractError) {
-      return Result.failure(cpfOrError);
-    }
-
     const userExists = await this.userRepo.exists(command.cpf);
     if (userExists instanceof AbstractError) {
       return Result.failure(userExists);
@@ -39,9 +33,9 @@ export class UserSaveFirstLoginHandler
     return Result.success(saveOrError);
   }
 
-  private makeAggregate(rawData) {
+  private makeAggregate(rawData): UserAggregateRoot | AbstractError<any> {
     const build = new UserBuilder()
-      .withPassword(rawData.password)
+      .withPassword({ value: rawData.password })
       .withUsername(rawData.cpf)
       .withUserGroups([{ id: 1, main: true }])
       .withPerson({

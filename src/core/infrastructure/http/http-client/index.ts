@@ -1,3 +1,2 @@
-export { HttpClient } from './http-client';
-export { HttpClientRequest } from './http-client-request';
-export { HttpClientResponse } from './http-client-response';
+export { AxiosHttpClient } from './axios.http-client';
+export { HttpClientInterface } from './http-client.interface';

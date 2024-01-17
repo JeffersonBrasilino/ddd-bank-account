@@ -1,7 +1,6 @@
 import { ActionFactory } from '@core/application';
-import { DomainValidationError } from '@core/domain/errors';
-import { DataNotFoundError } from '@core/infrastructure/errors';
 import { Result } from '@core/application/result';
+import { ErrorFactory } from '@core/domain/errors';
 import { ACTIONS, actions } from '@module/user/infrastructure/cqrs';
 import { UserController } from '@module/user/infrastructure/http/user.controller';
 import { CommandBus } from '@nestjs/cqrs';
@@ -16,19 +15,11 @@ describe('UserController', () => {
       execute: jest
         .fn()
         .mockReturnValueOnce(Result.success('success'))
-        .mockReturnValueOnce(
-          Result.failure(new DomainValidationError('error validation')),
-        )
-        .mockReturnValueOnce(
-          Result.failure(new DataNotFoundError('not Exists')),
-        )
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('InvalidData')))
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('notFound')))
         .mockReturnValueOnce(Result.success('success'))
-        .mockReturnValueOnce(
-          Result.failure(new DomainValidationError('error validation')),
-        )
-        .mockReturnValueOnce(
-          Result.failure(new DataNotFoundError('not Exists')),
-        ),
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('InvalidData')))
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('notFound'))),
     } as unknown as CommandBus;
     actionFactory = new ActionFactory<actions>(ACTIONS);
     sut = new UserController(commandBus, actionFactory);
