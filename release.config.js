@@ -1,6 +1,6 @@
 module.exports = {
   ci: false,
-  branches: ['main'],
+  branches: ['main', 'master'],
   plugins: [
     '@semantic-release/changelog',
     '@semantic-release/release-notes-generator',
