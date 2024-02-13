@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserModule } from './user/infrastructure/user.module';
 
 const MODULES = [
-  UserModule,
+  // UserModule,
   /* PickUpPointsModule */
 ];
 @Module({

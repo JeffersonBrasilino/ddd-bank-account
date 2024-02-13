@@ -15,20 +15,20 @@ services:
   api-dev:
     container_name: ${API_NAME}-api
     build:
-      context: .
+      context: ../
       dockerfile: Dockerfile
       target: dev
     volumes:
-      - ./:/app
+      - ../../:/app
     env_file:
-      - .env
+      - ../../.env
     networks:
       - app_network
     ports:
       - "${API_PORT}:${API_PORT}"
     depends_on:
       - db
-
+  
 networks:
   app_network:
     driver: bridge

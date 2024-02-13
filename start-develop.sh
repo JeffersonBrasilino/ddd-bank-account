@@ -1,10 +1,2 @@
 #! /bin/sh
-echo "iniciando app em DESENVOLVIMENTO..."
-
-npm install -g npm
-
-npm install
-
-npm run migration:run
-
-npm run start:dev
+docker compose -f .setup/dev/docker-compose.yml --env-file .env up

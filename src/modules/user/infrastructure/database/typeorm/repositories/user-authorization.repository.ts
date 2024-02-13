@@ -3,7 +3,7 @@ import { UsersGroupsPermissionsEntity } from '../entities/users-groups-permissio
 import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
 import { AbstractError, ErrorFactory } from '@core/domain/errors';
 
-export class UserAuthirizationRepository
+export class UserAuthorizationRepository
   implements UserAuthorizationDataProviderInterface
 {
   async checkPermissionRouteByUser(

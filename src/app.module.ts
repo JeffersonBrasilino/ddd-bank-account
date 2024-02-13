@@ -13,10 +13,10 @@ import { APP_GUARD } from '@nestjs/core/constants';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { appConfig } from './config/app.config';
-import { UserAuthirizationRepository } from '@module/user/infrastructure/database/repositories/user-authorization.repository';
 import { UserAuthorizationGuard } from '@core/infrastructure/http/nestjs/guards/user/authorization';
 import { ApplicationAuthenticationGuard } from '@core/infrastructure/http/nestjs/guards/application/application-authentication.guard';
 import { ApplicationAuthenticationRepository } from '@module/system/infrastructure/database/repositories/application-authentication.repository';
+import { UserAuthorizationRepository } from '@module/user/infrastructure/database/typeorm/repositories/user-authorization.repository';
 
 @Module({
   controllers: [AppController],
@@ -41,7 +41,7 @@ import { ApplicationAuthenticationRepository } from '@module/system/infrastructu
   providers: [
     {
       provide: 'UserAuthirizationDataSource',
-      useClass: UserAuthirizationRepository,
+      useClass: UserAuthorizationRepository,
     },
     {
       provide: 'ApplicationAuthenticationDataSource',
