@@ -36,7 +36,7 @@
     "generate:endpoint": "nest g -c @lenus/generator endpoint",
     "test:module": "npx jest src/applications/$npm_config_module",
     "prepare-husky": "husky install",
-    "release": "npm run test:unit && npx cz --allow-empty && npx semantic-release"
+    "release": "npm run test:unit && npx semantic-release"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.363.0",
