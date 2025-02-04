@@ -26,6 +26,8 @@ export class PasswordValueObject extends ValueObject {
         new RequiredValidator(),
         new RegexValidator(
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        ).withErrorMessage(
+          `the password must contain: an uppercase letter, a number, a special character and a minimum length of 8 characters`,
         ),
       ],
     };

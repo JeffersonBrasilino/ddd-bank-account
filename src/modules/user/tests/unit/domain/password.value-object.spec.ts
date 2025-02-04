@@ -23,7 +23,9 @@ describe('PasswordValueObject', () => {
     }) as any;
     expect(sut).toBeInstanceOf(ValidationError);
     expect((sut as AbstractError<any>).getError()).toEqual({
-      value: ['is not valid to RegexValidator'],
+      value: [
+        'the password must contain: an uppercase letter, a number, a special character and a minimum length of 8 characters',
+      ],
     });
   });
 

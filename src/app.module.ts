@@ -1,26 +1,30 @@
 import { TypeormConnection } from '@core/infrastructure/database/typeorm/typeorm.connection';
 import { HttpErrorFilter } from '@core/infrastructure/http/nestjs/filters/http-error.filter';
+import { ApplicationAuthenticationGuard } from '@core/infrastructure/http/nestjs/guards/application/application-authentication.guard';
 import {
-  UserAuthenticationStrategy,
   UserAuthenticationGuard,
+  UserAuthenticationStrategy,
 } from '@core/infrastructure/http/nestjs/guards/user/authentication';
+import { UserAuthorizationGuard } from '@core/infrastructure/http/nestjs/guards/user/authorization';
 import { HttpResponseTransformInterceptor } from '@core/infrastructure/http/nestjs/interceptors/http-response-transform.interceptor';
 import { ModulesModule } from '@module/modules.module';
+import { ApplicationAuthenticationRepository } from '@module/system/infrastructure/database/repositories/application-authentication.repository';
+import { UserAuthirizationRepository } from '@module/user/infrastructure/database/typeorm/repositories/user-authorization.repository';
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { APP_GUARD } from '@nestjs/core/constants';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { appConfig } from './config/app.config';
-import { UserAuthorizationGuard } from '@core/infrastructure/http/nestjs/guards/user/authorization';
-import { ApplicationAuthenticationGuard } from '@core/infrastructure/http/nestjs/guards/application/application-authentication.guard';
-import { ApplicationAuthenticationRepository } from '@module/system/infrastructure/database/repositories/application-authentication.repository';
-import { UserAuthorizationRepository } from '@module/user/infrastructure/database/typeorm/repositories/user-authorization.repository';
 
 @Module({
   controllers: [AppController],
   imports: [
+    HttpModule,
+    JwtModule,
     ConfigModule.forRoot({
       ignoreEnvFile: process.env.NODE_ENV === 'production',
       envFilePath:
@@ -41,7 +45,7 @@ import { UserAuthorizationRepository } from '@module/user/infrastructure/databas
   providers: [
     {
       provide: 'UserAuthirizationDataSource',
-      useClass: UserAuthorizationRepository,
+      useClass: UserAuthirizationRepository,
     },
     {
       provide: 'ApplicationAuthenticationDataSource',
