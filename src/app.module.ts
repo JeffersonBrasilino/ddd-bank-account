@@ -9,10 +9,10 @@ import { UserAuthorizationGuard } from '@core/infrastructure/http/nestjs/guards/
 import { HttpResponseTransformInterceptor } from '@core/infrastructure/http/nestjs/interceptors/http-response-transform.interceptor';
 import { ModulesModule } from '@module/modules.module';
 import { ApplicationAuthenticationRepository } from '@module/system/infrastructure/database/repositories/application-authentication.repository';
-import { UserAuthirizationRepository } from '@module/user/infrastructure/database/typeorm/repositories/user-authorization.repository';
+import { UserAuthorizationRepository } from '@module/user/infrastructure/database/typeorm/repositories/user-authorization.repository';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { APP_GUARD } from '@nestjs/core/constants';
 import { JwtModule } from '@nestjs/jwt';
@@ -45,7 +45,7 @@ import { appConfig } from './config/app.config';
   providers: [
     {
       provide: 'UserAuthirizationDataSource',
-      useClass: UserAuthirizationRepository,
+      useClass: UserAuthorizationRepository,
     },
     {
       provide: 'ApplicationAuthenticationDataSource',
