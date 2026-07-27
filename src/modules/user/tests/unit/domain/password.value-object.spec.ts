@@ -34,7 +34,7 @@ describe('PasswordValueObject', () => {
     expect(true).toBe(true);
   });
 
-  const getMethodsToTest = [{ method: 'getValue', toReturn: 'Password@1' }];
+  const getMethodsToTest = [{ method: 'value', toReturn: 'Password@1' }];
   for (const target of getMethodsToTest) {
     it(`should be ${target.method} method is defined`, () => {
       expect(typeof sut[target.method] == 'function').toEqual(true);

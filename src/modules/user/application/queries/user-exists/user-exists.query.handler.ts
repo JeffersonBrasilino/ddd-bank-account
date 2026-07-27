@@ -5,6 +5,7 @@ import { UserExistsRepositoryInterface } from '@module/user/domain/contracts/use
 import { UserAggregateRoot } from '@module/user/domain/user.aggregate-root';
 import { UserMapper } from '@module/user/mapper/user.mapper';
 import { UserExistsQuery } from './user-exists.query';
+import { UserExistsResponseDto } from './user-exists.response.dto';
 import { AbstractError } from '@core/domain/errors';
 
 type response = Result<AbstractError<any> | any>;
@@ -26,7 +27,7 @@ export class UserExistsQueryHandler
     if (personGateway instanceof UserAggregateRoot) {
       return Result.success({
         firstLogin: true,
-        ...this.userMpaper.toDto(personGateway, 'userEistsResponse'),
+        ...this.userMpaper.toDto(personGateway, UserExistsResponseDto),
       });
     }
     return Result.failure(personGateway);

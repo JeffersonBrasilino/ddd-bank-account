@@ -16,9 +16,9 @@ export class SaveUserDto {
   readonly devices?: Array<any>;
   constructor(aggregate: UserAggregateRoot) {
     this.id = aggregate.getId();
-    this.uuid = aggregate.getUuid();
+    this.uuid = aggregate.uuid();
     this.username = aggregate.getUsername();
-    this.password = aggregate.getPassword().getValue();
+    this.password = aggregate.getPassword().value();
     this.verificationCode = aggregate.getRecoveryCode();
 
     if (aggregate.getUserGroups() != undefined)
@@ -35,7 +35,7 @@ export class SaveUserDto {
   private parseUsersGroup(usersGroup: UserGroupsEntity[], aggregateId?) {
     return usersGroup.map(ug => {
       return {
-        uuid: ug.getUuid(),
+        uuid: ug.uuid(),
         id: ug.getUserGroupUserId(),
         user: aggregateId ? { id: aggregateId } : undefined,
         userGroup: { id: ug.getId() },
@@ -48,7 +48,7 @@ export class SaveUserDto {
     return devices.map(device => {
       return {
         id: device.getId(),
-        uuid: device.getUuid(),
+        uuid: device.uuid(),
         deviceId: device.getDeviceId(),
         deviceName: device.getDeviceName(),
         authToken: device.getAuthToken(),
@@ -61,10 +61,10 @@ export class SaveUserDto {
   private parsePerson(person: PersonEntity) {
     const res = {
       id: person.getId(),
-      uuid: person.getUuid(),
+      uuid: person.uuid(),
       name: person.getName(),
       birthDate: person.getBirthDate(),
-      cpf: person.getCpf().getValue(),
+      cpf: person.getCpf().value(),
     };
     if (person.getContacts() != undefined) {
       Object.assign(res, {
@@ -79,7 +79,7 @@ export class SaveUserDto {
     return contacts.map(contact => {
       return {
         id: contact.getId(),
-        uuid: contact.getUuid(),
+        uuid: contact.uuid(),
         description: contact.getDescription(),
         main: contact.isMain() ? 1 : 0,
         personContactType: {

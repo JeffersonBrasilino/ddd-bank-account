@@ -17,6 +17,7 @@ import { APP_FILTER, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { APP_GUARD } from '@nestjs/core/constants';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Connections } from '../typeorm.data-source';
 import { AppController } from './app.controller';
 import { appConfig } from './config/app.config';
 
@@ -37,7 +38,7 @@ import { appConfig } from './config/app.config';
     TypeOrmModule.forRootAsync({
       useFactory: () => ({}),
       dataSourceFactory: async () => {
-        return await TypeormConnection.connect();
+        return await new TypeormConnection(Connections).connect();
       },
     }),
     ModulesModule,

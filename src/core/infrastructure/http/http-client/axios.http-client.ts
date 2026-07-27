@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import {
+  HttpClientHeaders,
   HttpClientInterface,
   HttpClientResponseProps,
 } from './http-client.interface';
@@ -16,9 +17,11 @@ export class AxiosHttpClient implements HttpClientInterface {
     action: string,
     uri: string,
     data?: object,
+    headers?: HttpClientHeaders,
   ): Promise<HttpClientResponseProps<TResponse>> {
     try {
-      const response = await this.axiosInstance[action](uri, data);
+      const config = headers ? { headers } : {};
+      const response = await this.axiosInstance[action](uri, data, config);
       return {
         status: response.status,
         data: response.data as TResponse,
@@ -30,32 +33,42 @@ export class AxiosHttpClient implements HttpClientInterface {
       } as HttpClientResponseProps<TResponse>;
     }
   }
+
   async get<TResponse>(
     uri: string,
+    headers?: HttpClientHeaders,
   ): Promise<HttpClientResponseProps<TResponse>> {
-    return await this.request('get', uri);
+    return await this.request('get', uri, undefined, headers);
   }
+
   async post<TResponse>(
     uri: string,
     data: object,
+    headers?: HttpClientHeaders,
   ): Promise<HttpClientResponseProps<TResponse>> {
-    return await this.request('post', uri, data);
+    return await this.request('post', uri, data, headers);
   }
+
   async put<TResponse>(
     uri: string,
     data: object,
+    headers?: HttpClientHeaders,
   ): Promise<HttpClientResponseProps<TResponse>> {
-    return await this.request('put', uri, data);
+    return await this.request('put', uri, data, headers);
   }
+
   async remove<TResponse>(
     uri: string,
+    headers?: HttpClientHeaders,
   ): Promise<HttpClientResponseProps<TResponse>> {
-    return await this.request('delete', uri);
+    return await this.request('delete', uri, undefined, headers);
   }
+
   async patch<TResponse>(
     uri: string,
     data: object,
+    headers?: HttpClientHeaders,
   ): Promise<HttpClientResponseProps<TResponse>> {
-    return await this.request('patch', uri, data);
+    return await this.request('patch', uri, data, headers);
   }
 }

@@ -31,7 +31,7 @@ export class LoginCommandHandler
     if (
       !this.checkPassword(
         command.password,
-        resultOrError.getPassword()?.getValue() ?? '',
+        resultOrError.getPassword()?.value() ?? '',
       )
     ) {
       return Result.failure(
@@ -72,7 +72,7 @@ export class LoginCommandHandler
     refreshTokenProps: Partial<any> = {},
   ): makeJwtReturnProps {
     const data = {
-      userId: userdata.getUuid(),
+      userId: userdata.uuid(),
       usersGroups: userdata.getUserGroups().map(v => {
         return { main: v.isMain(), id: v.getId() };
       }),

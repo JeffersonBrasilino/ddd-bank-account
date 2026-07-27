@@ -7,7 +7,7 @@ import {
 } from '@core/domain/validator/domain-validator.factory';
 
 export class CpflValueObject extends ValueObject {
-  private constructor(private readonly value: string) {
+  private constructor(private readonly _value: string) {
     super();
   }
 
@@ -32,8 +32,8 @@ export class CpflValueObject extends ValueObject {
     return new CpflValueObject(value);
   }
 
-  getValue() {
-    return this.value;
+  value() {
+    return this._value;
   }
 
   static removeSpecialCharacters(value: string): string {

@@ -8,7 +8,7 @@ import { domainValidatorSchemaProps } from '@core/domain/validator/domain-valida
 import { RegexValidator } from '@core/domain/validator/regex.validator';
 
 export class EmailValueObject extends ValueObject {
-  private constructor(readonly value: string) {
+  private constructor(private readonly _value: string) {
     super();
   }
 
@@ -34,7 +34,7 @@ export class EmailValueObject extends ValueObject {
     return new EmailValueObject(value);
   }
 
-  getValue() {
-    return this.value;
+  value() {
+    return this._value;
   }
 }

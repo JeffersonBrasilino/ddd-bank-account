@@ -1,0 +1,16 @@
+process.env.AWS_S3_KEY ??= 'test';
+process.env.AWS_S3_TOKEN ??= 'test';
+process.env.AWS_S3_REGION ??= 'us-east-1';
+process.env.AWS_S3_BUCKET ??= 'ddd-bank-account-bucket';
+process.env.AWS_S3_ENDPOINT ??= 'http://localhost:4566';
+process.env.AWS_S3_FORCE_PATH_STYLE ??= 'true';
+process.env.AWS_SES_KEY ??= 'test';
+process.env.AWS_SES_TOKEN ??= 'test';
+process.env.AWS_SES_REGION ??= 'us-east-1';
+process.env.AWS_SES_ENDPOINT ??= 'http://localhost:4566';
+process.env.API_AUTH_TOKEN_SALT ??= 'test-salt';
+process.env.API_AUTH_TOKEN_EXPIRATION ??= '8h';
+process.env.API_AUTH_REFRESH_TOKEN_SALT ??= 'test-refresh-salt';
+process.env.API_AUTH_REFRESH_TOKEN_EXPIRATION ??= '7d';
+process.env.LOG_LEVEL ??= 'error';
+process.env.NODE_ENV ??= 'test';

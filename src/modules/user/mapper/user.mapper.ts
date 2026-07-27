@@ -5,7 +5,6 @@ import {
 } from '@core/mapper';
 import { UserAggregateRoot } from '@module/user/domain/user.aggregate-root';
 import { UserBuilder } from '@module/user/domain/user.builder';
-import { UserExistsResponseDto } from '../application/queries/user-exists/user-exists.response.dto';
 import { UserGroupsEntitytProps } from '../domain/user-groups.entity';
 import { SaveUserDto } from '../infrastructure/database/typeorm/dtos/save-user.dto';
 export class UserMapper
@@ -14,18 +13,15 @@ export class UserMapper
     PersistenceMapperInterface<UserAggregateRoot>,
     DtoMapperInterface<UserAggregateRoot>
 {
-  private availableDtos = { userEistsResponse: UserExistsResponseDto };
-
   toPersistence(domainData: UserAggregateRoot): SaveUserDto {
     return new SaveUserDto(domainData);
   }
 
-  toDto(
+  toDto<TDto extends new (...args: any[]) => object>(
     domainData: UserAggregateRoot,
-    convertTo?: keyof typeof this.availableDtos,
-  ) {
-    if (Object.keys(this.availableDtos).indexOf[convertTo] != -1)
-      return new this.availableDtos[convertTo](domainData);
+    convertTo?: TDto,
+  ): InstanceType<TDto> {
+    return new convertTo(domainData) as InstanceType<TDto>;
   }
 
   toDomain(rawData: Partial<any>) {

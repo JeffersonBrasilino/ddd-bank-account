@@ -1,4 +1,4 @@
 export abstract class DomainEvent {
-  ocurranceTime: Date;
-  data: unknown;
+  ocurranceOn: number;
+  payload: any;
 }

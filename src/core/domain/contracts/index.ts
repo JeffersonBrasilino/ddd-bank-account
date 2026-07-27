@@ -1,2 +1,2 @@
 export { BaseRepositoryInterface } from './base-repository.interface';
-export { IUuIdInterface } from './Uuid.interface';
+export { UuidInterface } from './Uuid.interface';

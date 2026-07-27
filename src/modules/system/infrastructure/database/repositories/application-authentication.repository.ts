@@ -11,7 +11,7 @@ export class ApplicationAuthenticationRepository
       const app = await ApplicationsEntity.findOneBy({ publicKey });
       return app != null
         ? app.uuid
-        : errorFactory.create('notFound', 'Application not found');
+        : errorFactory.create('NotFound', 'Application not found');
     } catch (e) {
       return errorFactory.create('Internal', 'error getting application');
     }

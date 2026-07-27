@@ -21,6 +21,11 @@ export class PersonBuilder extends AbstractDomainBuilder<
   PersonEntity,
   PersonEntitytProps
 > {
+  withId(id: string | number): this {
+    this.addFragment('id', { value: id });
+    return this;
+  }
+
   withContacts(data: WithPersonContactsProps[]): this {
     const buildedContacts = [];
     for (let contact of data) {

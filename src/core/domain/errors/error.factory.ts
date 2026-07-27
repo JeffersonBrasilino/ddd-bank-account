@@ -1,10 +1,10 @@
+import { AbstractError, ErrorMessageArg } from './abstract-error';
 import { ERRORS, ErrorsType } from './errors.type';
-import { AbstractError } from '@core/domain/errors';
 
 export class ErrorFactory {
   private map: Map<ErrorsType, AbstractError<any>> = new Map();
 
-  private static classInstance?: ErrorFactory = null;
+  private static classInstance: ErrorFactory | null = null;
   private constructor() {
     this.register();
   }
@@ -31,7 +31,26 @@ export class ErrorFactory {
 
   public static create(
     type: ErrorsType,
-    ...props: any
+    errorOrMessage: ErrorMessageArg,
+  ): AbstractError<ErrorsType>;
+  public static create(
+    type: ErrorsType,
+    errorOrMessage: ErrorMessageArg,
+    code: string,
+  ): AbstractError<ErrorsType>;
+  public static create(
+    type: ErrorsType,
+    errorOrMessage: ErrorMessageArg,
+    code: string,
+    previousError: AbstractError<any>,
+  ): AbstractError<ErrorsType>;
+  public static create(
+    type: ErrorsType,
+    ...props: unknown[]
+  ): AbstractError<ErrorsType>;
+  public static create(
+    type: ErrorsType,
+    ...props: unknown[]
   ): AbstractError<ErrorsType> {
     const errorFactoryInstance = ErrorFactory.instance();
 

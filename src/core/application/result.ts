@@ -3,8 +3,8 @@ import { AbstractError } from '@core/domain/errors';
 export class Result<T> {
   public constructor(
     private success: boolean,
-    private error?: any,
-    private value?: any,
+    private error?: AbstractError<any>,
+    private value?: T,
   ) {
     Object.freeze(this);
   }
@@ -13,14 +13,15 @@ export class Result<T> {
     return this.value;
   }
 
-  public getError(): T | string | string[] {
+  public getError(): AbstractError<any> {
     return this.error;
   }
+
   public static success<U>(value?: U): Result<U> {
     return new Result<U>(true, null, value);
   }
 
-  public static failure<U>(error: string | U): Result<U> {
+  public static failure<U>(error: AbstractError<any>): Result<U> {
     return new Result<U>(false, error);
   }
 
@@ -30,17 +31,5 @@ export class Result<T> {
 
   public isFailure(): boolean {
     return !this.success;
-  }
-
-  public static combine(...results: Array<AbstractError<any>>): Result<any> {
-    const errors = [];
-    const instanceErrors = ['AbstractError'];
-    for (const result of results) {
-      const parentErrorClasss = Object.getPrototypeOf(result.constructor).name;
-      if (instanceErrors.indexOf(parentErrorClasss) != -1) {
-        errors.push(result);
-      }
-    }
-    return errors.length > 0 ? Result.failure(errors) : Result.success();
   }
 }

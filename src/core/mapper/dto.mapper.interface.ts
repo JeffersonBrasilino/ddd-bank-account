@@ -1,3 +1,6 @@
 export interface DtoMapperInterface<T> {
-  toDto(data: T, convertTo?: string | boolean);
+  toDto<TDto extends new (...args: any[]) => {}>(
+    data: T,
+    convertTo?: TDto,
+  ): InstanceType<TDto>;
 }

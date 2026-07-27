@@ -1,4 +1,4 @@
-import { UuIdV4 } from '../infrastructure/uuid/uuIdv4';
+import { UuIdV7 } from '@core/infrastructure/uuid/uuIdv7';
 
 export type EntityProps = {
   uuid?: string;
@@ -8,10 +8,12 @@ export type EntityProps = {
  * toda entidade de domino deve estender essa classe, serve para identificar um domain entity.
  */
 export abstract class Entity {
-  constructor(protected uuid?: string) {
-    this.uuid = uuid ?? new UuIdV4().generate();
+  private _uuid: string;
+  constructor(uuid?: string) {
+    //TODO: Ajustar para remover dependência da infra e criar via interface UUID.
+    this._uuid = uuid ?? new UuIdV7().generate();
   }
-  getUuid(): string {
-    return this.uuid;
+  uuid(): string {
+    return this._uuid;
   }
 }
