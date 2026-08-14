@@ -3,5 +3,5 @@
  * todo value objects deve estender essa classe, serve para identificar um objeto de valor.
  */
 export abstract class ValueObject {
-  abstract getValue();
+  abstract value();
 }

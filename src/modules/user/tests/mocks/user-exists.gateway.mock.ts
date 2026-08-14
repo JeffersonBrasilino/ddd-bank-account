@@ -31,7 +31,7 @@ export const UserExistsGatewayMock: jest.Mocked<UserExistsGatewayInterface> = {
           },
         });
       }
-      return ErrorFactory.create('notFound', 'usuario nao encontrado');
+      return ErrorFactory.create('NotFound', 'usuario nao encontrado');
     } catch (e) {
       return ErrorFactory.create('Internal', 'error getting user from gateway');
     }

@@ -13,32 +13,35 @@ export class TypeormBaseEntity extends BaseEntity {
 
   @Column({
     name: 'uuid',
-    nullable: true,
     comment: 'identificador unico do registro',
   })
   uuid!: string;
 
   @Column({
-    type: 'char',
-    default: '1',
-    comment: 'situacao do registro. 1 - ativo, 0 - inativo',
+    name: 'active',
+    type: 'boolean',
+    default: true,
+    comment: 'situacao do registro. true - ativo, false - inativo',
   })
-  status!: string;
+  active!: boolean;
 
   @CreateDateColumn({
     name: 'created_at',
+    type: 'timestamp',
     comment: 'data de criacao do registro',
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
+    type: 'timestamp',
     comment: 'data de ALTERACAO do registro',
   })
   updatedAt!: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
+    type: 'timestamp',
     comment: 'data de EXCLUSAO do registro(soft-delete)',
   })
   deletedAt!: Date;

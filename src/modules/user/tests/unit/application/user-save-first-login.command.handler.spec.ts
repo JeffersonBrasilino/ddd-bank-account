@@ -1,5 +1,5 @@
 import { Result } from '@core/application/result';
-import { ErrorFactory, ValidationError } from '@core/domain/errors';
+import { ErrorFactory, ProcessingError } from '@core/domain/errors';
 import { AlreadyExistsError } from '@core/domain/errors/already-exists.error';
 import { DependencyError } from '@core/domain/errors/dependency.error';
 import { InvalidDataError } from '@core/domain/errors/invalid-data.error';
@@ -35,7 +35,7 @@ describe('UserSaveFirstLoginHandler', () => {
     expect(response).toBeInstanceOf(Result);
     expect((response as Result<any>).isSuccess()).toBe(false);
     expect((response as Result<any>).getError()).toBeInstanceOf(
-      ValidationError,
+      ProcessingError,
     );
   });
 

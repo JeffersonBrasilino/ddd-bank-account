@@ -1,12 +1,19 @@
 module.exports = {
   rootDir: 'src',
-  testMatch: ['modules/**/tests/*.spec.ts', 'modules/**/tests/*.e2e-spec.ts'],
+  testMatch: [
+    'modules/**/tests/*.spec.ts',
+    'modules/**/tests/*.e2e-spec.ts',
+    'core/application/**/*.spec.ts',
+    'core/domain/**/*.spec.ts',
+    'core/infrastructure/**/*.spec.ts',
+  ],
   moduleNameMapper: {
     '^@core/(.*)$': '<rootDir>/core/$1',
     '^@module/(.*)$': '<rootDir>/modules/$1',
   },
   moduleFileExtensions: ['ts', 'js', 'tsx', 'jsx'],
   preset: 'ts-jest',
+  setupFiles: ['<rootDir>/../test/jest-env.setup.js'],
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
@@ -22,7 +29,7 @@ module.exports = {
   clearMocks: true,
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
-  modulePathIgnorePatterns: ['<rootDir>/core/'],
+  modulePathIgnorePatterns: [],
   coverageThreshold: {
     global: {
       statements: 90,

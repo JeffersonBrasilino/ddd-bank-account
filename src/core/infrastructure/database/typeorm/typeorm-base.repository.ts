@@ -1,269 +1,297 @@
+import { Entity } from '@core/domain';
 import {
   BaseRepositoryInterface,
-  queryProps,
+  findRelations,
+  listFilterProps,
+  listResponseProps,
 } from '@core/domain/contracts/base-repository.interface';
-import { AbstractError } from '@core/domain/errors';
-import { FindOptionsWhere } from 'typeorm';
-import { Repository } from 'typeorm/repository/Repository';
+import { AbstractError, ErrorFactory } from '@core/domain/errors';
+import { DomainMapperInterface } from '@core/mapper';
+import { PersistenceMapperInterface } from '@core/mapper/persistence.mapper.interface';
+import {
+  EntityManager,
+  EntityNotFoundError,
+  EntityTarget,
+  FindOptionsOrder,
+  FindOptionsRelations,
+  FindOptionsWhere,
+  Raw,
+  Repository,
+} from 'typeorm';
+import { getPaginationParams as paginationUtil } from './pagination.util';
+import { TypeormBaseEntity } from './typeorm-base.entity';
+import { TypeormConnection } from './typeorm.connection';
+import { LoggerDecorator } from '@core/infrastructure/logger';
+
 export interface FilterProps {
   name?: string;
   value?: any;
 }
+
 export interface FilterResponse {
   condition: any;
   value?: any;
   [key: string]: any;
 }
 
-export class TypeormBaseRepository<T> implements BaseRepositoryInterface<T> {
-  private baseRepository: Repository<T>;
-  constructor(protected entity) {
-    if (!entity) throw Error('sem entidade no repositorio.');
+export type repositoryMapperType<T> = PersistenceMapperInterface<T> &
+  DomainMapperInterface<T>;
 
-    this.baseRepository = entity;
+export class TypeormBaseRepository<
+  TAggregateRoot extends Entity,
+  TAggregateEntity extends TypeormBaseEntity,
+> implements BaseRepositoryInterface<TAggregateRoot>
+{
+  protected entity: EntityTarget<TAggregateEntity>;
+  protected mapper: repositoryMapperType<TAggregateRoot>;
+  protected readonly injectedRepository?: Repository<TAggregateEntity>;
+
+  constructor(
+    entityOrRepository:
+      | EntityTarget<TAggregateEntity>
+      | Repository<TAggregateEntity>,
+    mapper: repositoryMapperType<TAggregateRoot>,
+  ) {
+    if (!entityOrRepository) {
+      throw Error('sem entidade no repositorio.');
+    }
+
+    if (this.isRepository(entityOrRepository)) {
+      this.injectedRepository = entityOrRepository;
+      this.entity = entityOrRepository.target as EntityTarget<TAggregateEntity>;
+    } else {
+      this.entity = entityOrRepository;
+    }
+
+    this.mapper = mapper;
+  }
+
+  private isRepository(
+    candidate: unknown,
+  ): candidate is Repository<TAggregateEntity> {
+    if (candidate === null || typeof candidate !== 'object') {
+      return false;
+    }
+    const r = candidate as Repository<TAggregateEntity>;
+    return typeof r.find === 'function' && typeof r.save === 'function';
+  }
+
+  protected get baseRepository(): Repository<TAggregateEntity> {
+    return (
+      this.injectedRepository ??
+      TypeormConnection.getConnection().getRepository(this.entity)
+    );
+  }
+
+  protected getRepo(manager?: EntityManager): Repository<TAggregateEntity> {
+    if (manager) return manager.getRepository(this.entity as any);
+    return this.baseRepository;
+  }
+
+  protected getPaginationParams(page?: number, perPage?: number) {
+    return paginationUtil(page, perPage);
+  }
+
+  @LoggerDecorator()
+  async list(
+    filter?: listFilterProps<TAggregateRoot>,
+    relations?: findRelations,
+  ): Promise<AbstractError<any> | listResponseProps<TAggregateRoot>> {
+    try {
+      const { page, perPage } = filter;
+      const { take, skip } = this.getPaginationParams(page, perPage);
+
+      const where = this.processQueyFilter(
+        filter ?? ({} as listFilterProps<TAggregateRoot>),
+      );
+
+      const totalResult = await this.baseRepository.count({
+        where: where as FindOptionsWhere<TAggregateEntity>,
+      });
+      if (totalResult == 0) {
+        return { totalRows: 0, perPage: 0, totalPages: 0, data: [] };
+      }
+
+      const rows = await this.baseRepository.find({
+        take,
+        skip,
+        where: where as FindOptionsWhere<TAggregateEntity>,
+        relations: relations as FindOptionsRelations<TAggregateEntity>,
+        order: {
+          createdAt: 'desc',
+        } as FindOptionsOrder<TAggregateEntity>,
+      });
+
+      const aggregateList = rows.map(data => {
+        return this.mapper.toDomain(data) as TAggregateRoot;
+      });
+      const totalPages = Math.ceil(totalResult / take);
+      return {
+        totalRows: totalResult,
+        perPage: take,
+        totalPages,
+        data: aggregateList,
+      };
+    } catch (e) {
+      return ErrorFactory.create('Dependency', e.toString());
+    }
+  }
+
+  @LoggerDecorator()
+  async get(
+    uuid: string,
+    relations?: findRelations,
+  ): Promise<AbstractError<any> | TAggregateRoot> {
+    try {
+      const data = await this.baseRepository.findOne({
+        where: { uuid } as FindOptionsWhere<TAggregateEntity>,
+        relations: relations as FindOptionsRelations<TAggregateEntity>,
+      });
+
+      if (!data) {
+        return ErrorFactory.create('NotFound', 'Not found.');
+      }
+
+      return this.mapper.toDomain(data);
+    } catch (e) {
+      return ErrorFactory.create('Dependency', e.toString());
+    }
+  }
+
+  @LoggerDecorator()
+  async insert(data: TAggregateRoot): Promise<boolean | AbstractError<any>> {
+    try {
+      const dataToPersist = this.mapper.toPersistence(data);
+      await this.baseRepository.save(dataToPersist);
+      return true;
+    } catch (e) {
+      return ErrorFactory.create('Dependency', e.toString());
+    }
+  }
+
+  @LoggerDecorator()
+  async update(data: TAggregateRoot): Promise<boolean | AbstractError<any>> {
+    try {
+      const dataDb = await this.baseRepository.findOneOrFail({
+        where: { uuid: data.uuid() } as FindOptionsWhere<any>,
+      });
+
+      const dataToPersist = this.mapper.toPersistence(data);
+      this.baseRepository.merge(dataDb, dataToPersist);
+      await this.baseRepository.save(dataDb);
+      return true;
+    } catch (e) {
+      if (e instanceof EntityNotFoundError)
+        return ErrorFactory.create('NotFound', 'Not found.');
+
+      return ErrorFactory.create('Dependency', e.toString());
+    }
+  }
+
+  @LoggerDecorator()
+  async remove(
+    uuid: string,
+    soft = true,
+  ): Promise<boolean | AbstractError<any>> {
+    try {
+      const entity = await this.baseRepository.findOne({
+        where: { uuid } as FindOptionsWhere<any>,
+      });
+
+      if (!entity) {
+        return ErrorFactory.create('NotFound', 'Entity not found.');
+      }
+
+      if ('active' in entity) {
+        await this.baseRepository.update(
+          { uuid } as FindOptionsWhere<any>,
+          { active: false } as any,
+        );
+      }
+
+      if (soft === true) {
+        await this.baseRepository.softDelete({ uuid } as FindOptionsWhere<any>);
+        return true;
+      }
+
+      await this.baseRepository.delete({ uuid } as FindOptionsWhere<any>);
+      return true;
+    } catch (e) {
+      return ErrorFactory.create('Dependency', e.toString());
+    }
+  }
+
+  @LoggerDecorator()
+  async restoreDeleted(data: Partial<any>): Promise<TAggregateRoot | any> {
+    return await this.baseRepository.restore(data);
+  }
+
+  @LoggerDecorator()
+  async exists(condition: Partial<any>): Promise<boolean | AbstractError<any>> {
+    try {
+      const res = await this.baseRepository.count({ where: condition });
+      if (res > 0) {
+        return true;
+      }
+      return ErrorFactory.create('NotFound', 'Not found.');
+    } catch (e) {
+      return ErrorFactory.create('Dependency', e.toString());
+    }
   }
 
   protected convertFilterNameToSnakeCase(filterName: string) {
     return filterName.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
   }
 
-  public getPaginationParams(page: number, perPage?: number) {
-    perPage = perPage ?? 10;
-    const pageNumber = page - 1;
-    const skip = perPage * pageNumber;
-    return { take: perPage, skip: skip };
-  }
-  list<TFilters extends queryProps>(
-    filter?: TFilters,
-  ): Promise<AbstractError<any> | any> {
-    throw new Error('Method not implemented.');
-  }
-  get(id: number | string): Promise<AbstractError<any> | any> {
-    return this.baseRepository.findOne({
-      where: { id } as FindOptionsWhere<any>,
-    });
-  }
-  find(filter: Partial<any>): Promise<AbstractError<any> | T[]> {
-    return this.baseRepository.find({
-      where: filter as FindOptionsWhere<any>,
-    });
-  }
-  upsert(data: T): Promise<AbstractError<any> | any> {
-    return this.baseRepository.save(data);
-  }
-  remove(data: Partial<any>, soft = true): Promise<any> {
-    if (soft === true) {
-      return this.baseRepository.softDelete(data);
-    } else {
-      return this.baseRepository.delete(data);
-    }
-  }
-
-  async restoreDeleted(data: Partial<any>): Promise<T | any> {
-    return await this.baseRepository.restore(data);
-  }
-
-  async exists(condition: Partial<any>): Promise<boolean> {
-    const res = await this.baseRepository.count({ where: condition });
-    return res > 0;
-  }
-
   /**
-   * verifica e adapta o valor para o filtro LIKE do typeorm.
-   * para a função saber se a string é do tipoo like, a mesma deve vir entre % ex: %xxx%
+   * verifica e adapta os filtros para o typeorm.
+   * usa como base as chaves dos campos da raiz agregada.
+   *
+   * o tipo de filtro a ser aplicado deve ser informado antes do valor
+   *
+   * filtros disponiveis: like
+   * @example
+   * ```ts
+   * const filter = {
+   *  key: "like:test"
+   * }
+   * processQueyFilter(filter)
+   * ```
    * @param string value
-   * @returns Raw
+   * @returns listFilterProps<TAggregateRoot>
    */
-  // private likeFilter(filter: FilterProps): FilterResponse | void {
-  //   const filterLikeString = filter.value.match(new RegExp(/^%(.+)%(25)?$/));
-  //   if (filterLikeString != null) {
-  //     //substitui o codigo unicode pelo caractere.
-  //     const value = filter.value.replace(new RegExp(/(%25)/g), '%');
+  protected processQueyFilter(filters: listFilterProps<TAggregateRoot>) {
+    const ignoredProps = ['page', 'perPage'];
+    const availableFiltersFunctions = { like: this.likeFilter };
+    let proccessedFilters = {};
+    for (const key in filters) {
+      if (ignoredProps.indexOf(key) != -1 || !filters[key]) {
+        continue;
+      }
 
-  //     const filterName = this.convertFilterNameToSnakeCase(filter.name);
-  //     return {
-  //       condition: `UPPER(${filterName}) LIKE UPPER(:${filterName})`,
-  //       value: { [filterName]: value },
-  //     };
-  //   }
-  // }
+      const typeAndValueFilter = filters[key].split(':');
+      if (
+        typeAndValueFilter.length == 1 ||
+        !availableFiltersFunctions[typeAndValueFilter[0]]
+      ) {
+        proccessedFilters[key] = filters[key];
+        continue;
+      }
 
-  // /**
-  //  * verifica e adapta o valor para o filtro OK do typeorm.
-  //  * para a função saber se a string é do tipo OR, a mesma deve vir separado por pipe '|' ex:aaa|bbbb
-  //  * @param value
-  //  * @returns FindOperator<any> | void
-  //  */
-  // private orFilter(orFilterConditions: Partial<any>): FilterResponse | void {
-  //   let condition = '';
-  //   let valueCondition: Partial<any> = {};
-  //   const categoriesOrFilters = Object.keys(orFilterConditions) ?? [];
-  //   let categoriesOrFiltersLength = categoriesOrFilters.length;
+      const [type, value] = typeAndValueFilter;
+      const result = availableFiltersFunctions[type](key, value);
+      proccessedFilters = { ...proccessedFilters, ...result };
+    }
 
-  //   //percorre os filtros vindos do serviço
-  //   categoriesOrFilters.map((orTypeFilter) => {
-  //     //verifica se o tipo de filtro é liberado para ser processado, casoo haja um novo filtro, bastat adicionar o tipo do filtro no array e a regra que o filtro aplicará.
-  //     if (['like', 'equal'].indexOf(orTypeFilter) != -1) {
-  //       //pega o tamanho do filtro, serve para calcular e adicionar o OR entre um filtro e outro.
-  //       let lengthFilter = Object.keys(orFilterConditions[orTypeFilter]).length;
-  //       //percorre os filtros, lembrando que os filtros devem ser passados como mapa ex:{chave:valor}.
-  //       for (let filterLikeConditionName in orFilterConditions[orTypeFilter]) {
-  //         //verifica se os filtros estão dentro da chave like, se estiver indica que a busca é por LIKE.
-  //         if (orTypeFilter == 'like') {
-  //           //chama a funçaõ que monta o filtro like.
-  //           const conditionLike = this.likeFilter({
-  //             name: filterLikeConditionName,
-  //             value: '%' + orFilterConditions.like[filterLikeConditionName] + '%',
-  //           });
-  //           //caso a função retorne o filtro, adiciona o filtro na string de filtros processados, assim como o seu valor.
-  //           if (conditionLike) {
-  //             condition += conditionLike.condition;
-  //             valueCondition = { ...valueCondition, ...conditionLike.value };
-  //           }
-  //         }
-  //         //verifica se os filtros estão dentro do mapa equal, caso sim, o filtro é do tipo igualdade.
-  //         if (orTypeFilter == 'equal') {
-  //           //converte o nome do filtro para snake_case, pois os nomes de coluna no banco seguem esse parão.
-  //           condition +=
-  //             ' ' + this.convertFilterNameToSnakeCase(filterLikeConditionName) + ' = :' + filterLikeConditionName;
+    return proccessedFilters;
+  }
 
-  //           valueCondition = {
-  //             ...valueCondition,
-  //             ...{
-  //               [filterLikeConditionName]: orFilterConditions.like[filterLikeConditionName],
-  //             },
-  //           };
-  //         }
+  private likeFilter(key: string, value: any): any {
+    const filter = {};
+    filter[key] = Raw(alias => `unaccent(lower(${alias})) like unaccent(lower(:value))`, {
+      value: `%${value}%`,
+    });
 
-  //         //verifica se existe mais de um filtro(pelo tamanho do mapa), se sim, adiciona a condição OR entre os filtros.
-  //         if (lengthFilter > 1) {
-  //           condition += ' OR ';
-  //           lengthFilter--;
-  //         }
-  //       }
-  //       //se existir mais de um tipo de filtro ou, adiciona a condição OR entre os tipos.
-  //       if (categoriesOrFiltersLength > 1) {
-  //         condition += ' OR ';
-  //         categoriesOrFiltersLength--;
-  //       }
-  //     }
-  //   });
-  //   return {
-  //     condition: condition,
-  //     value: valueCondition,
-  //   };
-  // }
-
-  // private inFilter(inFilters: Partial<any>): FilterResponse | void {
-  //   let condition = '';
-  //   let conditionValue: Partial<any> = {};
-  //   let conditionength = Object.keys(inFilters).length ?? 0;
-  //   for (let filterKey in inFilters) {
-  //     condition += ` ${this.convertFilterNameToSnakeCase(filterKey)} IN (:...${filterKey})`;
-  //     conditionValue = {
-  //       ...conditionValue,
-  //       ...{ [filterKey]: inFilters[filterKey] ?? [] },
-  //     };
-
-  //     if (conditionength > 1) {
-  //       condition += ' AND ';
-  //     }
-  //   }
-
-  //   return { condition: condition, value: conditionValue };
-  // }
-
-  // protected proccessQueryFilters(filters: Partial<any>, qb: SelectQueryBuilder<any>) {
-  //   for (let filterKey in filters) {
-  //     if (filterKey == 'orfilter') {
-  //       const orFilter = this.orFilter(filters[filterKey]);
-  //       if (orFilter) {
-  //         qb.andWhere(orFilter.condition, orFilter.value);
-  //       }
-  //     } else if (filterKey == 'infilter') {
-  //       const inFilter = this.inFilter(filters[filterKey]);
-  //       if (inFilter) qb.andWhere(inFilter.condition, inFilter.value);
-  //     } else {
-  //       const filter = { name: filterKey, value: filters[filterKey] };
-  //       //caso a string de busca vier ente porcento ex: %teste%, aplicará o filtro like.
-  //       const likeFilter = this.likeFilter(filter);
-  //       if (likeFilter) {
-  //         qb.andWhere(likeFilter.condition, likeFilter.value);
-  //       } else {
-  //         const filterName = this.convertFilterNameToSnakeCase(filter.name);
-  //         qb.andWhere(`${filterName} = :${filterName}`, {
-  //           [filterName]: filter.value,
-  //         });
-  //       }
-  //     }
-  //   }
-  // }
-
-  // public getPaginationParams(page: number, perPage?: number) {
-  //   perPage = perPage ?? 10;
-  //   const pageNumber = page - 1;
-  //   const skip = perPage * pageNumber;
-  //   return { take: perPage, skip: skip };
-  // }
-
-  // async list(page: number, filter?: object, _perPage?: number, order?: object): Promise<any> {
-  //   const { take: take, skip: skip } = this.getPaginationParams(page, _perPage);
-  //   /*  const countResult = await this.baseRepository().find({
-  //     where: (qb) => this.proccessQueryFilters(filter, qb),
-  //   }); */
-  //   const countResult = await this.baseRepository()
-  //     .count
-  //     //where:{}
-  //     ();
-  //   const rows = await this.baseRepository().find({
-  //     take: take,
-  //     skip: skip,
-  //     //where: (qb) => this.proccessQueryFilters(filter, qb),
-  //     order: order ?? {},
-  //   });
-  //   return { rows: rows, total: countResult, perPage: take };
-  // }
-
-  // get(id: number | string): Promise<T | any> {
-  //   return this.baseRepository().findOne({
-  //     where: { id: id } as FindOptionsWhere<any>,
-  //   });
-  // }
-
-  // async save(data: Partial<any>, id?: number): Promise<T | any> {
-  //   //id de edicao
-  //   if (id) {
-  //     Object.assign(data, { id: id });
-  //   }
-  //   //@ts-ignore
-  //   return await this.baseRepository().save(data);
-  // }
-
-  // async delete(data: number | string | Partial<any>, soft = true): Promise<any> {
-  //   //atualiza status para disparar o subs de updated e salvar o log no banco.
-  //   if (typeof data !== 'object') {
-  //     //@ts-ignore
-  //     await this.baseRepository().save({
-  //       id: data,
-  //       status: '0',
-  //     } as Partial<any>);
-  //   }
-
-  //   if (soft === true) {
-  //     //@ts-ignore
-  //     return await this.baseRepository().softDelete(data);
-  //   } else {
-  //     //@ts-ignore
-  //     return await this.baseRepository().delete(data);
-  //   }
-  // }
-
-  // async restoreDeleted(data: number | object): Promise<T | any> {
-  //   return await this.baseRepository().restore(data);
-  // }
-
-  // async exists(condition: Partial<any>): Promise<boolean> {
-  //   const res = await this.baseRepository().count({ where: condition });
-  //   return res > 0;
-  // }
+    return filter;
+  }
 }

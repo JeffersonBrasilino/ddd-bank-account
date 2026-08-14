@@ -32,7 +32,19 @@ export class SwaggerDocumentation implements IApiHttpDocumentation {
       .setTitle(this._title)
       .setDescription(this._description)
       .setVersion(this._version)
-      .addBearerAuth()
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          description:
+            'Informe o token JWT retornado pelo endpoint de login (sem o prefixo "Bearer ").',
+          in: 'header',
+        },
+        'bearer',
+      )
+      .addSecurityRequirements('bearer')
       .build();
 
     const document = SwaggerModule.createDocument(this._app, config);
@@ -40,6 +52,15 @@ export class SwaggerDocumentation implements IApiHttpDocumentation {
       customCss: '.topbar{display:none}',
       customSiteTitle: '',
       customfavIcon: '',
+      swaggerOptions: {
+        persistAuthorization: true,
+        tryItOutEnabled: true,
+        displayRequestDuration: true,
+        docExpansion: 'none',
+        filter: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+      },
     });
   }
 }

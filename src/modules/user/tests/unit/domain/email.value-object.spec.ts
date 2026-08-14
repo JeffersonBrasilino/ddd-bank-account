@@ -18,7 +18,7 @@ describe('EmailValueObject', () => {
     });
   });
 
-  const getMethodsToTest = [{ method: 'getValue', toReturn: 'test@test.com' }];
+  const getMethodsToTest = [{ method: 'value', toReturn: 'test@test.com' }];
   for (const target of getMethodsToTest) {
     it(`should be ${target.method} method is defined`, () => {
       expect(typeof sut[target.method] == 'function').toEqual(true);

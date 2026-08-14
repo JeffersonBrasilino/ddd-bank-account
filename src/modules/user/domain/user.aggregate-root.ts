@@ -126,7 +126,7 @@ export class UserAggregateRoot extends AggregateRoot {
 
     if (device == undefined) {
       return ErrorFactory.create(
-        'notFound',
+        'NotFound',
         `device ${deviceId} has not found`,
       );
     }

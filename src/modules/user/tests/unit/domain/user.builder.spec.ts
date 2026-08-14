@@ -1,7 +1,7 @@
 import {
   AbstractError,
   ErrorFactory,
-  ValidationError,
+  ProcessingError,
 } from '@core/domain/errors';
 import { PersonBuilder } from '@module/user/domain/person/person.builder';
 import { PersonEntity } from '@module/user/domain/person/person.entity';
@@ -62,7 +62,7 @@ describe('UserBuilder', () => {
       .spyOn(mockMethods, 'build')
       .mockReturnValue(ErrorFactory.create('Validation', 'invalid person'));
     const sut = sutFactory();
-    expect(sut).toBeInstanceOf(ValidationError);
+    expect(sut).toBeInstanceOf(ProcessingError);
     expect((sut as AbstractError<any>).getError()).toMatchObject({
       person: 'invalid person',
     });
@@ -73,7 +73,7 @@ describe('UserBuilder', () => {
       .spyOn(UserGroupsEntity, 'create')
       .mockReturnValue(ErrorFactory.create('Validation', 'invalid user group'));
     const sut = sutFactory();
-    expect(sut).toBeInstanceOf(ValidationError);
+    expect(sut).toBeInstanceOf(ProcessingError);
     expect((sut as AbstractError<any>).getError()).toMatchObject({
       'UserGroupsEntity.0': 'invalid user group',
     });
@@ -84,7 +84,7 @@ describe('UserBuilder', () => {
       .spyOn(UserDevicesEntity, 'create')
       .mockReturnValue(ErrorFactory.create('Validation', 'invalid device'));
     const sut = sutFactory()
-    expect(sut).toBeInstanceOf(ValidationError);
+    expect(sut).toBeInstanceOf(ProcessingError);
     expect((sut as AbstractError<any>).getError()).toMatchObject({
       'UserDevicesEntity.0': 'invalid device',
     });

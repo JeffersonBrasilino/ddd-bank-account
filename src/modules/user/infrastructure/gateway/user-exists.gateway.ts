@@ -19,7 +19,7 @@ export class UserExistsGateway implements UserExistsGatewayInterface {
         res.data.results == undefined ||
         res.data.results.length == 0
       ) {
-        return ErrorFactory.create('notFound', 'usuario nao encontrado');
+        return ErrorFactory.create('NotFound', 'usuario nao encontrado');
       }
       const userData = res.data.results[0];
       return this.mapper.toDomain({

@@ -1,5 +1,3 @@
-import { ActionHandlerInterface } from './action-handler.interface';
-
 export type actionProps = { [key: string]: any };
 
 export class ActionFactory<Actions> {
@@ -19,17 +17,16 @@ export class ActionFactory<Actions> {
     return this._actionsMap.has(action);
   }
 
-  public create<TDto>(
-    action: Actions,
-    props?: TDto,
-  ): ActionHandlerInterface<any> {
+  public create<TDto>(action: Actions, props?: TDto): any {
     if (!this.exists(action)) {
       throw new Error(`There is no handler for this action ${action}`);
     }
 
     const actionInstance = this._actionsMap.get(action);
 
-    return !props ? new actionInstance() : new actionInstance(props);
+    const result = !props ? new actionInstance() : new actionInstance(props);
+
+    return result;
   }
 
   public getActions() {

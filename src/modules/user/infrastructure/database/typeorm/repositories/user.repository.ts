@@ -47,7 +47,7 @@ export class UserRepository
             usersGroup: undefined,
             devices: undefined,
           })
-        : ErrorFactory.create('notFound', 'usuario nao encontrado');
+        : ErrorFactory.create('NotFound', 'usuario nao encontrado');
     } catch (e) {
       return ErrorFactory.create('Internal', e.toString());
     }
@@ -83,7 +83,7 @@ export class UserRepository
         .getOne();
       return userData != null
         ? this.mapper.toDomain(userData)
-        : ErrorFactory.create('notFound', 'usuario nao encontrado');
+        : ErrorFactory.create('NotFound', 'usuario nao encontrado');
     } catch (e) {
       return ErrorFactory.create('Internal', e.toString());
     }
@@ -101,7 +101,7 @@ export class UserRepository
       return userData != null
         ? this.mapper.toDomain(userData)
         : ErrorFactory.create(
-            'notFound',
+            'NotFound',
             'Código de verifiação ou usuário incorreto.',
           );
     } catch (e) {
@@ -113,7 +113,7 @@ export class UserRepository
     user: UserAggregateRoot,
   ): Promise<boolean | AbstractError<any> | any> {
     try {
-      const userDb = await UsersEntity.findOneBy({ uuid: user.getUuid() });
+      const userDb = await UsersEntity.findOneBy({ uuid: user.uuid() });
       const dataToSave = this.mapper.toPersistence(user);
       if (userDb === null) {
         await UsersEntity.create(dataToSave as DeepPartial<UsersEntity>).save();
@@ -132,7 +132,7 @@ export class UserRepository
       const result = await PersonEntity.findOneBy({ cpf });
       return result != null
         ? true
-        : ErrorFactory.create('notFound', 'usuario nao encontrado');
+        : ErrorFactory.create('NotFound', 'usuario nao encontrado');
     } catch (err) {
       return ErrorFactory.create('Internal', 'error while checking permission');
     }
@@ -167,7 +167,7 @@ export class UserRepository
         .where('dev.refreshToken = :refreshToken', { refreshToken })
         .getOne();
       return result == null
-        ? ErrorFactory.create('notFound', 'refresh token not found')
+        ? ErrorFactory.create('NotFound', 'refresh token not found')
         : this.mapper.toDomain(result);
     } catch (e) {
       return ErrorFactory.create(

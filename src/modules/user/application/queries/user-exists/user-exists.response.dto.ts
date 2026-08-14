@@ -9,7 +9,7 @@ export class UserExistsResponseDto {
   constructor(aggregate: UserAggregateRoot) {
     const personData = aggregate.getPerson();
     this.name = personData.getName();
-    this.cpf = personData.getCpf().getValue();
+    this.cpf = personData.getCpf().value();
     this.birthDate = personData.getBirthDate();
     this.phone = personData.getContacts()[1].getDescription();
     this.email = personData.getContacts()[0].getDescription();

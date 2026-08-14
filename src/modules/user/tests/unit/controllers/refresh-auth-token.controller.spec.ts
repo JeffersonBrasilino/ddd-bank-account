@@ -16,7 +16,7 @@ describe('RefreshAuthTokenController', () => {
         .fn()
         .mockReturnValueOnce(Result.success('success'))
         .mockReturnValueOnce(Result.failure(ErrorFactory.create('InvalidData')))
-        .mockReturnValueOnce(Result.failure(ErrorFactory.create('notFound'))),
+        .mockReturnValueOnce(Result.failure(ErrorFactory.create('NotFound'))),
     } as unknown as CommandBus;
     actionFactory = new ActionFactory<actions>(ACTIONS);
     sut = new RefreshAuthTokenController(commandBus, actionFactory);

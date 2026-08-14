@@ -28,6 +28,11 @@ export class UserBuilder extends AbstractDomainBuilder<
   UserAggregateRoot,
   UserAggregateRootProps
 > {
+  withId(id: string | number): this {
+    this.addFragment('id', { value: id });
+    return this;
+  }
+
   withPassword(password: passwordValueObjectProps): this {
     this.addFragment('password', {
       value: password,

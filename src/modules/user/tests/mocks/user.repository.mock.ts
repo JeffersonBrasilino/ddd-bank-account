@@ -21,7 +21,7 @@ export const userRepo: jest.Mocked<
       return mapper.toDomain(UserStub.userAggregrateStub());
 
     if (username == 'not_found')
-      return ErrorFactory.create('notFound', 'usuario nao encontrado');
+      return ErrorFactory.create('NotFound', 'usuario nao encontrado');
 
     if (username == 'not_found_email') {
       let userData = UserStub.userAggregrateStub();
@@ -39,7 +39,7 @@ export const userRepo: jest.Mocked<
       )
         return mapper.toDomain(UserStub.userAggregrateStub());
 
-      return ErrorFactory.create('notFound', 'usuario nao encontrado');
+      return ErrorFactory.create('NotFound', 'usuario nao encontrado');
     },
   ),
   getUserByUsername: jest.fn(async username => {
@@ -48,7 +48,7 @@ export const userRepo: jest.Mocked<
     }
 
     if (username == 'not_exists') {
-      return ErrorFactory.create('notFound', 'usuario nao encontrado');
+      return ErrorFactory.create('NotFound', 'usuario nao encontrado');
     }
 
     if (username == null) {
@@ -61,7 +61,7 @@ export const userRepo: jest.Mocked<
     }
 
     if (refreshToken == 'not_exists') {
-      return ErrorFactory.create('notFound', 'usuario nao encontrado');
+      return ErrorFactory.create('NotFound', 'usuario nao encontrado');
     }
 
     if (refreshToken == null) {

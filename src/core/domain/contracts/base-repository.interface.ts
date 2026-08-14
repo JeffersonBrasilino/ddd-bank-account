@@ -1,31 +1,41 @@
 import { AbstractError } from '../errors';
 
-export type queryProps = {
+export type listFilterProps<T> = {
   page?: number;
-  perPage?: number;
-};
-export type listProps<T> = {
-  rows: T[];
+  perPage: number;
+} & Partial<T>;
+
+export type listResponseProps<T> = {
+  data: T[];
   perPage: number;
   totalRows: number;
+  totalPages: number;
 };
 
-export interface BaseRepositoryInterface<T> {
-  getPaginationParams(page: number, perPage?: number);
+export type findRelations = {
+  [key: string]: boolean;
+};
 
-  list<TFilters extends queryProps>(
-    filter?: TFilters,
-  ): Promise<AbstractError<any> | any>;
+export interface BaseRepositoryInterface<TAggregateRoot> {
+  list(
+    filter?: listFilterProps<TAggregateRoot>,
+    relations?: findRelations,
+  ): Promise<AbstractError<any> | listResponseProps<TAggregateRoot>>;
 
-  get(id: number | string): Promise<AbstractError<any> | any>;
+  get(
+    uuid: string,
+    relations?: findRelations,
+  ): Promise<AbstractError<any> | TAggregateRoot>;
 
-  find(filter: Partial<any>): Promise<AbstractError<any> | T[]>;
+  insert(data: TAggregateRoot): Promise<boolean | AbstractError<any>>;
 
-  upsert(data: T): Promise<AbstractError<any> | any>;
+  update(data: TAggregateRoot): Promise<boolean | AbstractError<any>>;
 
-  remove(filter: Partial<any>, soft: boolean): Promise<any>;
+  remove(uuid: string, soft: boolean): Promise<boolean | AbstractError<any>>;
 
-  exists(condition: Partial<any>): Promise<boolean>;
+  exists(
+    condition: Partial<TAggregateRoot>,
+  ): Promise<boolean | AbstractError<any>>;
 
-  restoreDeleted(data: Partial<any>): Promise<T | any>;
+  restoreDeleted(data: Partial<TAggregateRoot>): Promise<TAggregateRoot | any>;
 }

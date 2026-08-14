@@ -49,7 +49,7 @@ export class PasswordValueObject extends ValueObject {
     return new PasswordValueObject(props);
   }
 
-  getValue(): string {
+  value(): string {
     return this.props.value;
   }
 
